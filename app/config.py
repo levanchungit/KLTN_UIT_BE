@@ -45,7 +45,7 @@ class AppConfig(BaseModel):
         "Giáo dục", "Khác"
     ])
     transaction_types: List[str] = Field(default_factory=lambda: [
-        "Thu nhập", "Chi tiêu", "Chuyển khoản"
+        "Thu nhập", "Chi phí", "Chuyển khoản"
     ])
     supported_locales: List[str] = Field(default_factory=lambda: ["vi-VN"])
     default_currency: str = "VND"

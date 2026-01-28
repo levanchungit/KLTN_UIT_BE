@@ -75,7 +75,7 @@ class PredictionResponse(BaseModel):
     Attributes:
         amount: Extracted transaction amount in VND
         category: Predicted category (must be from provided list)
-        type: Transaction type (Thu nhập/Chi tiêu/Chuyển khoản)
+        type: Transaction type (Thu nhập/Chi phí/Chuyển khoản)
         confidence: Confidence score between 0 and 1
         raw_output: Raw LLM output (for debugging)
     """
@@ -92,7 +92,7 @@ class PredictionResponse(BaseModel):
     type: str = Field(
         ...,
         alias="type",
-        description="Loại giao dịch (Thu nhập/Chi tiêu/Chuyển khoản)",
+        description="Loại giao dịch (Thu nhập/Chi phí/Chuyển khoản)",
         examples=["Thu nhập"]
     )
     confidence: float = Field(

@@ -13,7 +13,7 @@ Nhiệm vụ của bạn là phân tích câu mô tả giao dịch tiếng Việ
 
 ### 1. Xác định loại giao dịch (type):
 - "Thu nhập": Tiền vào, nhận tiền (lương, quà tặng, hoàn tiền, bán đồ, vay tiền)
-- "Chi tiêu": Tiền ra, chi tiêu (mua đồ, ăn uống, di chuyển, hóa đơn)
+- "Chi phí": Tiền ra, Chi phí (mua đồ, ăn uống, di chuyển, hóa đơn)
 - "Chuyển khoản": Chuyển tiền giữa tài khoản, ví điện tử
 
 ### 2. Trích xuất số tiền (amount):
@@ -40,7 +40,7 @@ Nhiệm vụ của bạn là phân tích câu mô tả giao dịch tiếng Việ
 {
   "amount": <số tiền>,
   "category": "<danh mục từ list>",
-  "type": "<Thu nhập|Chi tiêu|Chuyển khoản>",
+  "type": "<Thu nhập|Chi phí|Chuyển khoản>",
   "confidence": <độ tin cậy 0-1>
 }
 ```

@@ -91,7 +91,7 @@ async def predict(request: PredictRequest) -> PredictionResponse:
         return PredictionResponse(
             amount=prediction.get("amount", 0),
             category=prediction.get("category", "Khác"),
-            type=prediction.get("type", "Chi tiêu"),
+            type=prediction.get("type", "Chi phí"),
             confidence=prediction.get("confidence", 0.5),
             raw_output=raw_output if settings.server.debug else None
         )
@@ -156,7 +156,7 @@ async def predict_batch(
             responses.append(PredictionResponse(
                 amount=0,
                 category="Khác",
-                type="Chi tiêu",
+                type="Chi phí",
                 confidence=0.0,
                 raw_output=f"Error: {e.detail}"
             ))

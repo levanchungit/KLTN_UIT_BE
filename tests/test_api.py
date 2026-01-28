@@ -46,7 +46,7 @@ class TestCategoriesEndpoint:
         assert "Quà tặng" in data["categories"]
         assert "Lương" in data["categories"]
         assert "Thu nhập" in data["transaction_types"]
-        assert "Chi tiêu" in data["transaction_types"]
+        assert "Chi phí" in data["transaction_types"]
 class TestPredictEndpoint:
     """Tests for prediction endpoint"""
     @pytest.fixture(autouse=True)

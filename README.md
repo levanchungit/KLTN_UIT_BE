@@ -235,7 +235,7 @@ const predictTransaction = async (text, categories) => {
 2. Hậu xử lý: parse JSON, validate:
    - category phải thuộc categories[]
    - amount là số
-   - type thuộc {Thu nhập, Chi tiêu, Chuyển khoản}
+   - type thuộc {Thu nhập, Chi phí, Chuyển khoản}
    - Tính/giới hạn confidence trong [0,1]
 3. Nếu parse fail → trả lỗi kèm raw để debug
 

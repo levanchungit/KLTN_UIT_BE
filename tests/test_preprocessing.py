@@ -34,11 +34,11 @@ class TestDetectTransactionType:
     def test_income_from_bonus(self):
         assert detect_transaction_type("Thưởng cuối năm") == "Thu nhập"
     def test_expense_from_mua(self):
-        assert detect_transaction_type("Mua áo 200k") == "Chi tiêu"
+        assert detect_transaction_type("Mua áo 200k") == "Chi phí"
     def test_expense_from_cà_phê(self):
-        assert detect_transaction_type("Uống cà phê 50k") == "Chi tiêu"
+        assert detect_transaction_type("Uống cà phê 50k") == "Chi phí"
     def test_expense_from_hóa_đơn(self):
-        assert detect_transaction_type("Tiền điện 500k") == "Chi tiêu"
+        assert detect_transaction_type("Tiền điện 500k") == "Chi phí"
     def test_transfer(self):
         assert detect_transaction_type("Chuyển khoản cho bạn") == "Chuyển khoản"
     def test_transfer_vietqr(self):
@@ -79,5 +79,5 @@ class TestPreprocessTransaction:
         assert amount == 1000000
     def test_preprocess_expense(self):
         text, trans_type, amount = preprocess_transaction("Mua cà phê 50k")
-        assert trans_type == "Chi tiêu"
+        assert trans_type == "Chi phí"
         assert amount == 50000

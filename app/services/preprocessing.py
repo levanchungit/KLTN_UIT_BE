@@ -170,7 +170,7 @@ def detect_transaction_type(text: str) -> Optional[str]:
         text: Transaction text
     
     Returns:
-        Transaction type: "Thu nhập", "Chi tiêu", "Chuyển khoản" or None
+        Transaction type: "Thu nhập", "Chi phí", "Chuyển khoản" or None
     """
     text_lower = text.lower()
     
@@ -189,6 +189,14 @@ def detect_transaction_type(text: str) -> Optional[str]:
         r'được\s*cho', r'được\s*tặng', r'hay\s*tiền', r'thu\s*nhập',
         r'hoàn\s*tiền', r'hoàn\s*trả', r'bán\s*đồ', r'tiền\s*từ'
     ]
+    # Explicit patterns cho các trường hợp hay gặp trong giao dịch cá nhân
+    extra_income_patterns = [
+        # "Mẹ cho tiền", "Bố cho tiền", ...
+        r'(mẹ|bố|ba|cha|anh|chị|em|bạn)\s*cho\s*tiền',
+        # "Mẹ cho 1tr", "Bố cho 500k", ...
+        r'(mẹ|bố|ba|cha|anh|chị|em|bạn)\s*cho\s*\d',
+    ]
+    income_patterns.extend(extra_income_patterns)
     for pattern in income_patterns:
         if re.search(pattern, text_lower):
             return "Thu nhập"
@@ -202,11 +210,11 @@ def detect_transaction_type(text: str) -> Optional[str]:
     ]
     for pattern in expense_patterns:
         if re.search(pattern, text_lower):
-            return "Chi tiêu"
+            return "Chi phí"
     
     # Default to expense if money amount is detected with spending verbs
     if re.search(r'\d+[ktr]\s*(?:cho|mua|thanh\s*toán)', text_lower):
-        return "Chi tiêu"
+        return "Chi phí"
     
     return None
 def extract_amount_from_text(text: str) -> Optional[int]:
@@ -221,14 +229,14 @@ def extract_amount_from_text(text: str) -> Optional[int]:
     """
     # Pattern for numbers with suffixes
     patterns = [
-        # "1.000.000", "1000000" format
-        (r'(\d{1,3}(?:\.\d{3})+|\d+)', 1),
         # "1tr" or "1 triệu"
         (r'(\d+\.?\d*)\s*tr', 1000000),
         (r'(\d+\.?\d*)\s*triệu', 1000000),
         # "200k" or "200 K"
         (r'(\d+\.?\d*)\s*k', 1000),
         (r'(\d+\.?\d*)\s*nghìn', 1000),
+        # "1.000.000", "1000000" format (không có hậu tố)
+        (r'(\d{1,3}(?:\.\d{3})+|\d+)', 1),
     ]
     
     for pattern, multiplier in patterns:
@@ -254,7 +262,9 @@ def preprocess_transaction(text: str) -> Tuple[str, Optional[str], Optional[int]
         Tuple of (normalized_text, detected_type, extracted_amount)
     """
     normalized = normalize_text(text)
-    trans_type = detect_transaction_type(normalized)
+    # Dùng text gốc để đoán loại giao dịch (giữ lại thông tin "Mẹ cho", "Bố cho", ...)
+    trans_type = detect_transaction_type(text)
+    # Dùng text đã chuẩn hoá để trích xuất số tiền
     amount = extract_amount_from_text(normalized)
     
     return normalized, trans_type, amount

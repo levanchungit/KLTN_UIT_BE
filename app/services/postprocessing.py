@@ -225,7 +225,7 @@ def normalize_type(trans_type: str, valid_types: List[str]) -> str:
         Normalized type that exists in valid list
     """
     if not trans_type:
-        return valid_types[1] if len(valid_types) > 1 else "Chi tiêu"  # Default to expense
+        return valid_types[1] if len(valid_types) > 1 else "Chi phí"  # Default to expense
     
     # Direct match
     for valid in valid_types:
@@ -253,8 +253,8 @@ def normalize_type(trans_type: str, valid_types: List[str]) -> str:
             if "khoản" in valid.lower():
                 return valid
     
-    # Default to "Chi tiêu"
-    return valid_types[1] if len(valid_types) > 1 else "Chi tiêu"
+    # Default to "Chi phí"
+    return valid_types[1] if len(valid_types) > 1 else "Chi phí"
 def clamp_confidence(confidence: float, min_val: float = 0.0, max_val: float = 1.0) -> float:
     """
     Clamp confidence value to valid range
@@ -392,7 +392,7 @@ def create_fallback_prediction(
     # Try to extract basic info from raw output
     amount = 0
     category = "Khác"
-    trans_type = "Chi tiêu"
+    trans_type = "Chi phí"
     
     # Try to extract amount from raw output
     import re
