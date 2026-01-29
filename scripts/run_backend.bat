@@ -17,6 +17,6 @@ if exist "venv\Scripts\activate.bat" (
 echo [INFO] Starting uvicorn server on http://0.0.0.0:8000
 echo.
 
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+py -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 pause
