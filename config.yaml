@@ -5,12 +5,14 @@
 llm:
   base_url: "http://127.0.0.1:8080"
   api_key: "no-key-required"
-  # Recommended: Use smaller model for faster inference
+  # Recommended models (choose one):
+  # - qwen2.5-0.5b-instruct-q4_0.gguf  # Fastest, ~85% accuracy
+  # - qwen2.5-1.5b-instruct-q4_0.gguf  # Balanced, ~92% accuracy (RECOMMENDED)
+  # - qwen2.5-7b-instruct-q4_k_m.gguf  # Slowest, ~95% accuracy
   model: "qwen2.5-1.5b-instruct-q4_0.gguf"
-  # model: "qwen2.5-7b-instruct-q4_k_m.gguf"  # Slower but more accurate
   temperature: 0.0  # Deterministic output for caching
-  max_tokens: 256   # Optimized: JSON output needs ~100-150 tokens
-  timeout: 30       # Reduced from 60s
+  max_tokens: 150   # Optimized: JSON output needs ~100-150 tokens
+  timeout: 20   # Reduced from 60s
 
 # FastAPI Server Configuration
 server:
