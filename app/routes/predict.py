@@ -10,7 +10,8 @@ from app.config import get_settings
 from app.prompts.system_prompts import (
     MULTI_TRANSACTION_SYSTEM_PROMPT,
     build_multi_transaction_closed_domain_prompt,
-    build_multi_transaction_user_prompt
+    build_multi_transaction_user_prompt,
+    get_cache_info as get_prompt_cache_info
 )
 from app.schemas.request_response import (
     PredictRequest,
@@ -108,7 +109,9 @@ async def predict(request: PredictRequest) -> PredictionResponse:
             if "Khác" not in valid_categories:
                 valid_categories = valid_categories + ["Khác"]
             
-            system_prompt = build_multi_transaction_closed_domain_prompt(valid_categories)
+            # Convert to tuple for prompt caching
+            cat_tuple = tuple(valid_categories)
+            system_prompt = build_multi_transaction_closed_domain_prompt(cat_tuple)
             user_prompt = build_multi_transaction_user_prompt(normalized_text, valid_categories)
         
         # Get LLM prediction
@@ -248,6 +251,24 @@ async def get_categories() -> dict:
         "categories": settings.app.default_categories,
         "transaction_types": settings.app.transaction_types,
         "note": "These are default categories. In open-domain mode (empty categories), AI will determine the category automatically."
+    }
+
+
+@router.get("/cache/stats")
+async def get_cache_stats() -> dict:
+    """
+    Get cache statistics for monitoring performance
+    
+    Returns:
+        Dictionary with prompt and response cache stats
+    """
+    llm_service = get_llm_service()
+    return {
+        "prompt_cache": {
+            "closed_domain": str(get_prompt_cache_info()["closed_domain"]),
+            "multi_transaction": str(get_prompt_cache_info()["multi_transaction"])
+        },
+        "response_cache": llm_service.get_cache_stats()
     }
 
 

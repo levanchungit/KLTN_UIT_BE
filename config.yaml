@@ -1,16 +1,16 @@
 # KLTN_UIT_BE Configuration File
-# AI Backend for Transaction Classification
+# AI Backend for Transaction Classification - Optimized
 
 # LLM Server Configuration (llama.cpp)
 llm:
   base_url: "http://127.0.0.1:8080"
   api_key: "no-key-required"
+  # Recommended: Use smaller model for faster inference
   model: "qwen2.5-1.5b-instruct-q4_0.gguf"
-  # model: "qwen2.5-7b-instruct-q4_k_m.gguf"
-  # model: "gemma-2-9b-it-Q4_K_M.gguf"
-  temperature: 0.0
-  max_tokens: 512
-  timeout: 60 # seconds
+  # model: "qwen2.5-7b-instruct-q4_k_m.gguf"  # Slower but more accurate
+  temperature: 0.0  # Deterministic output for caching
+  max_tokens: 256   # Optimized: JSON output needs ~100-150 tokens
+  timeout: 30       # Reduced from 60s
 
 # FastAPI Server Configuration
 server:
@@ -26,7 +26,7 @@ server:
     - "exp://localhost:19000"
     - "exp://*"
     - "http://192.168.*.*:*"
-    - "*"  # Allow all origins for development (remove in production)
+    - "*"  # Allow all origins for development
 
 # Application Configuration
 app:
@@ -56,7 +56,7 @@ app:
 # Validation Configuration
 validation:
   min_amount: 0
-  max_amount: 10000000000 # 10 tỷ VND
+  max_amount: 10000000000  # 10 tỷ VND
   confidence_min: 0.0
   confidence_max: 1.0
 
