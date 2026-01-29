@@ -1,16 +1,173 @@
 """
 KLTN_UIT_BE Postprocessing Module
 JSON parsing, validation, and error handling for LLM responses
+Supports both Open-domain and Closed-domain classification
 """
 import json
 import logging
 import re
 from typing import Any, Dict, List, Optional, Tuple
 from app.config import get_settings
+
 logger = logging.getLogger(__name__)
+
+
 class PostprocessingError(Exception):
     """Custom exception for postprocessing errors"""
     pass
+
+
+# =====================
+# Category Normalization Mappings
+# =====================
+CATEGORY_NORMALIZATIONS = {
+    # Ăn uống variations
+    "ăn": "Ăn uống",
+    "đồ ăn": "Ăn uống",
+    "thức ăn": "Ăn uống",
+    "cơm": "Ăn uống",
+    "phở": "Ăn uống",
+    "bún": "Ăn uống",
+    "cafe": "Ăn uống",
+    "cà phê": "Ăn uống",
+    "coffee": "Ăn uống",
+    "trà sữa": "Ăn uống",
+    "highlands": "Ăn uống",
+    "starbucks": "Ăn uống",
+    "food": "Ăn uống",
+    "đồ uống": "Ăn uống",
+    "nhà hàng": "Ăn uống",
+    
+    # Di chuyển variations
+    "grab": "Di chuyển",
+    "be": "Di chuyển",
+    "gojek": "Di chuyển",
+    "taxi": "Di chuyển",
+    "xe": "Di chuyển",
+    "xăng": "Di chuyển",
+    "giao thông": "Di chuyển",
+    "vé xe": "Di chuyển",
+    "gửi xe": "Di chuyển",
+    "đi lại": "Di chuyển",
+    "transport": "Di chuyển",
+    
+    # Mua sắm variations
+    "shopping": "Mua sắm",
+    "mua đồ": "Mua sắm",
+    "quần áo": "Mua sắm",
+    "giày dép": "Mua sắm",
+    "shop": "Mua sắm",
+    
+    # Giải trí variations
+    "phim": "Giải trí",
+    "game": "Giải trí",
+    "netflix": "Giải trí",
+    "spotify": "Giải trí",
+    "youtube": "Giải trí",
+    "karaoke": "Giải trí",
+    "entertainment": "Giải trí",
+    
+    # Hóa đơn variations
+    "điện nước": "Hóa đơn",
+    "tiền điện": "Hóa đơn",
+    "tiền nước": "Hóa đơn",
+    "internet": "Hóa đơn",
+    "wifi": "Hóa đơn",
+    "gas": "Hóa đơn",
+    "bill": "Hóa đơn",
+    
+    # Sức khỏe variations
+    "thuốc": "Sức khỏe",
+    "bệnh viện": "Sức khỏe",
+    "khám bệnh": "Sức khỏe",
+    "gym": "Sức khỏe",
+    "tập gym": "Sức khỏe",
+    "phòng khám": "Sức khỏe",
+    "health": "Sức khỏe",
+    "y tế": "Sức khỏe",
+    
+    # Giáo dục variations
+    "học phí": "Giáo dục",
+    "sách": "Giáo dục",
+    "khóa học": "Giáo dục",
+    "education": "Giáo dục",
+    "học": "Giáo dục",
+    
+    # Lương variations
+    "salary": "Lương",
+    "thưởng": "Lương",
+    "bonus": "Lương",
+    "lương tháng": "Lương",
+    "income": "Lương",
+    
+    # Quà tặng variations
+    "mẹ cho": "Quà tặng",
+    "bố cho": "Quà tặng",
+    "ba cho": "Quà tặng",
+    "được cho": "Quà tặng",
+    "được tặng": "Quà tặng",
+    "quà": "Quà tặng",
+    "gift": "Quà tặng",
+    "tặng": "Quà tặng",
+    
+    # Mỹ phẩm variations
+    "son": "Mỹ phẩm",
+    "kem": "Mỹ phẩm",
+    "skincare": "Mỹ phẩm",
+    "mặt nạ": "Mỹ phẩm",
+    "serum": "Mỹ phẩm",
+    "make up": "Mỹ phẩm",
+    "cosmetic": "Mỹ phẩm",
+    
+    # Làm đẹp variations
+    "cắt tóc": "Làm đẹp",
+    "hớt tóc": "Làm đẹp",
+    "spa": "Làm đẹp",
+    "nail": "Làm đẹp",
+    "nhuộm tóc": "Làm đẹp",
+    "uốn tóc": "Làm đẹp",
+    "salon": "Làm đẹp",
+    "tóc": "Làm đẹp",
+    
+    # Viễn thông variations
+    "4g": "Viễn thông",
+    "5g": "Viễn thông",
+    "điện thoại": "Viễn thông",
+    "cước": "Viễn thông",
+    "data": "Viễn thông",
+    "nạp tiền điện thoại": "Viễn thông",
+    "viettel": "Viễn thông",
+    "mobifone": "Viễn thông",
+    "vinaphone": "Viễn thông",
+    
+    # Đám tiệc variations
+    "cưới": "Đám tiệc",
+    "đám cưới": "Đám tiệc",
+    "mừng cưới": "Đám tiệc",
+    "sinh nhật": "Đám tiệc",
+    "tiệc": "Đám tiệc",
+    "liên hoan": "Đám tiệc",
+    "đám giỗ": "Đám tiệc",
+    "party": "Đám tiệc",
+    
+    # Cho vay variations
+    "cho mượn": "Cho vay",
+    "cho vay": "Cho vay",
+    "mượn tiền": "Cho vay",
+    
+    # Trả nợ variations
+    "trả nợ": "Trả nợ",
+    "hoàn nợ": "Trả nợ",
+    "trả góp": "Trả nợ",
+    
+    # Sửa chữa variations
+    "sửa xe": "Sửa chữa",
+    "sửa chữa": "Sửa chữa",
+    "bảo trì": "Sửa chữa",
+    "repair": "Sửa chữa",
+}
+
+
 def clean_llm_output(raw_output: str) -> str:
     """
     Clean LLM output by removing markdown code blocks and extra whitespace
@@ -46,6 +203,8 @@ def clean_llm_output(raw_output: str) -> str:
             cleaned = cleaned[start_idx:end_idx+1]
     
     return cleaned
+
+
 def parse_json_response(raw_output: str) -> Dict[str, Any]:
     """
     Parse LLM output as JSON
@@ -68,6 +227,8 @@ def parse_json_response(raw_output: str) -> Dict[str, Any]:
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse JSON: {cleaned[:200]}...")
         raise PostprocessingError(f"Invalid JSON format: {e}")
+
+
 def validate_prediction(
     prediction: Dict[str, Any],
     valid_categories: List[str],
@@ -135,9 +296,11 @@ def validate_prediction(
         errors.append(f"'confidence' ({confidence}) exceeds maximum ({max_confidence})")
     
     return len(errors) == 0, errors
+
+
 def normalize_category(category: str, valid_categories: List[str]) -> str:
     """
-    Normalize category to match valid categories
+    Normalize category to match valid categories (Closed-domain)
     
     Args:
         category: Predicted category
@@ -161,46 +324,8 @@ def normalize_category(category: str, valid_categories: List[str]) -> str:
         if category_lower in valid_lower or valid_lower in category_lower:
             return valid
     
-    # Check for similar categories
-    category_mapping = {
-        "ăn": "Ăn uống",
-        "đồ ăn": "Ăn uống",
-        "cà phê": "Ăn uống",
-        "cafe": "Ăn uống",
-        "coffee": "Ăn uống",
-        "shop": "Mua sắm",
-        "shopping": "Mua sắm",
-        "mua sắm": "Mua sắm",
-        "di chuyển": "Di chuyển",
-        "đi lại": "Di chuyển",
-        "grab": "Di chuyển",
-        "vé": "Di chuyển",
-        "xăng": "Di chuyển",
-        "giải trí": "Giải trí",
-        "game": "Giải trí",
-        "phim": "Giải trí",
-        "sức khỏe": "Sức khỏe",
-        "thuốc": "Sức khỏe",
-        "bệnh viện": "Sức khỏe",
-        "hóa đơn": "Hóa đơn",
-        "điện": "Hóa đơn",
-        "nước": "Hóa đơn",
-        "wifi": "Hóa đơn",
-        "internet": "Hóa đơn",
-        "lương": "Lương",
-        "thưởng": "Lương",
-        "quà": "Quà tặng",
-        "tặng": "Quà tặng",
-        "cho": "Quà tặng",
-        "vay": "Mượn tiền",
-        "nợ": "Mượn tiền",
-        "trả nợ": "Mượn tiền",
-        "học": "Giáo dục",
-        "khóa học": "Giáo dục",
-        "sách": "Giáo dục",
-    }
-    
-    for key, mapped in category_mapping.items():
+    # Check mapping
+    for key, mapped in CATEGORY_NORMALIZATIONS.items():
         if key in category_lower:
             # Check if mapped category is valid
             for valid in valid_categories:
@@ -213,6 +338,38 @@ def normalize_category(category: str, valid_categories: List[str]) -> str:
             return valid
     
     return valid_categories[-1] if valid_categories else "Khác"
+
+
+def normalize_open_category(category: str) -> str:
+    """
+    Normalize category for open-domain classification
+    Standardize to common category names
+    
+    Args:
+        category: Raw category from LLM
+    
+    Returns:
+        Normalized category name
+    """
+    if not category:
+        return "Khác"
+    
+    category = category.strip()
+    category_lower = category.lower()
+    
+    # Check for exact match in normalizations
+    if category_lower in CATEGORY_NORMALIZATIONS:
+        return CATEGORY_NORMALIZATIONS[category_lower]
+    
+    # Check for partial match
+    for key, value in CATEGORY_NORMALIZATIONS.items():
+        if key in category_lower:
+            return value
+    
+    # Capitalize first letter if no match found
+    return category.capitalize()
+
+
 def normalize_type(trans_type: str, valid_types: List[str]) -> str:
     """
     Normalize transaction type to match valid types
@@ -240,10 +397,10 @@ def normalize_type(trans_type: str, valid_types: List[str]) -> str:
                 return valid
     
     # Check for expense indicators
-    expense_indicators = ["chi", "tiêu", "trả", "mua", "ra", "支出", "expense"]
+    expense_indicators = ["chi", "tiêu", "trả", "mua", "ra", "expense"]
     if any(ind in trans_type.lower() for ind in expense_indicators):
         for valid in valid_types:
-            if "tiêu" in valid.lower():
+            if "chi" in valid.lower():
                 return valid
     
     # Check for transfer indicators
@@ -255,6 +412,8 @@ def normalize_type(trans_type: str, valid_types: List[str]) -> str:
     
     # Default to "Chi phí"
     return valid_types[1] if len(valid_types) > 1 else "Chi phí"
+
+
 def clamp_confidence(confidence: float, min_val: float = 0.0, max_val: float = 1.0) -> float:
     """
     Clamp confidence value to valid range
@@ -268,6 +427,8 @@ def clamp_confidence(confidence: float, min_val: float = 0.0, max_val: float = 1
         Clamped confidence value
     """
     return max(min_val, min(max_val, confidence))
+
+
 def fix_prediction(
     prediction: Dict[str, Any],
     valid_categories: List[str],
@@ -276,7 +437,7 @@ def fix_prediction(
     max_amount: int = 10_000_000_000
 ) -> Dict[str, Any]:
     """
-    Try to fix an invalid prediction
+    Try to fix an invalid prediction (Closed-domain)
     
     Args:
         prediction: Raw prediction dictionary
@@ -312,6 +473,8 @@ def fix_prediction(
     fixed["confidence"] = clamp_confidence(float(confidence))
     
     return fixed
+
+
 def process_llm_response(
     raw_output: str,
     valid_categories: List[str],
@@ -319,7 +482,7 @@ def process_llm_response(
     fix_invalid: bool = True
 ) -> Dict[str, Any]:
     """
-    Complete postprocessing pipeline for LLM response
+    Complete postprocessing pipeline for LLM response (Closed-domain)
     
     Args:
         raw_output: Raw LLM output
@@ -373,13 +536,128 @@ def process_llm_response(
         "_validation_errors": errors,
         "_raw_output": raw_output
     }
+
+
+def process_open_domain_response(
+    raw_output: str,
+    valid_types: List[str]
+) -> Dict[str, Any]:
+    """
+    Process LLM response for open-domain classification
+    Accept any category from LLM, only validate type and amount
+    
+    Args:
+        raw_output: Raw LLM output
+        valid_types: List of valid transaction types
+    
+    Returns:
+        Processed prediction dictionary with normalized category
+    """
+    settings = get_settings()
+    validation = settings.validation
+    
+    # Parse JSON
+    try:
+        prediction = parse_json_response(raw_output)
+    except PostprocessingError as e:
+        logger.warning(f"JSON parse failed in open-domain mode: {e}")
+        return create_open_domain_fallback(raw_output, valid_types)
+    
+    # Normalize category (accept any, just clean up)
+    category = prediction.get("category", "Khác")
+    if not category or not isinstance(category, str):
+        category = "Khác"
+    category = normalize_open_category(category.strip())
+    
+    # Validate and fix type
+    trans_type = prediction.get("type", "")
+    if trans_type not in valid_types:
+        trans_type = normalize_type(trans_type, valid_types)
+    
+    # Validate amount
+    amount = prediction.get("amount", 0)
+    if not isinstance(amount, (int, float)):
+        amount = 0
+    elif amount < validation.min_amount or amount > validation.max_amount:
+        amount = max(validation.min_amount, min(validation.max_amount, amount))
+    
+    # Validate confidence
+    confidence = prediction.get("confidence", 0.5)
+    if not isinstance(confidence, (int, float)):
+        confidence = 0.5
+    confidence = clamp_confidence(float(confidence))
+    
+    result = {
+        "amount": int(amount),
+        "category": category,
+        "type": trans_type,
+        "confidence": confidence
+    }
+    
+    logger.debug(f"Open-domain prediction processed: {result}")
+    return result
+
+
+def create_open_domain_fallback(
+    raw_output: str,
+    valid_types: List[str]
+) -> Dict[str, Any]:
+    """
+    Create fallback prediction for open-domain when parsing fails
+    
+    Args:
+        raw_output: Raw LLM output
+        valid_types: List of valid transaction types
+    
+    Returns:
+        Fallback prediction dictionary
+    """
+    amount = 0
+    category = "Khác"
+    trans_type = "Chi phí"
+    
+    # Try to extract amount
+    amount_patterns = [
+        r'"amount"\s*:\s*(\d+)',
+        r'amount[:\s]+(\d+)',
+    ]
+    for pattern in amount_patterns:
+        match = re.search(pattern, raw_output, re.IGNORECASE)
+        if match:
+            try:
+                amount = int(float(match.group(1)))
+                break
+            except ValueError:
+                pass
+    
+    # Try to extract category
+    cat_pattern = r'"category"\s*:\s*"([^"]+)"'
+    match = re.search(cat_pattern, raw_output)
+    if match:
+        category = normalize_open_category(match.group(1))
+    
+    # Try to extract type
+    type_pattern = r'"type"\s*:\s*"([^"]+)"'
+    match = re.search(type_pattern, raw_output)
+    if match:
+        trans_type = normalize_type(match.group(1), valid_types)
+    
+    return {
+        "amount": amount,
+        "category": category,
+        "type": trans_type,
+        "confidence": 0.0,
+        "_fallback": True
+    }
+
+
 def create_fallback_prediction(
     valid_categories: List[str],
     valid_types: List[str],
     raw_output: str = ""
 ) -> Dict[str, Any]:
     """
-    Create a fallback prediction when parsing fails
+    Create a fallback prediction when parsing fails (Closed-domain)
     
     Args:
         valid_categories: List of valid categories
@@ -395,7 +673,6 @@ def create_fallback_prediction(
     trans_type = "Chi phí"
     
     # Try to extract amount from raw output
-    import re
     amount_patterns = [
         r'"amount"\s*:\s*(\d+)',
         r'amount[:\s]+(\d+)',
@@ -429,4 +706,226 @@ def create_fallback_prediction(
         "confidence": 0.0,
         "_fallback": True,
         "_raw_output": raw_output
+    }
+
+
+# =====================
+# Multi-Transaction Processing
+# =====================
+def process_multi_transaction_response(
+    raw_output: str,
+    valid_categories: List[str] = None,
+    valid_types: List[str] = None
+) -> Dict[str, Any]:
+    """
+    Process LLM response that may contain multiple transactions
+    
+    Args:
+        raw_output: Raw LLM output
+        valid_categories: List of valid categories (None for open-domain)
+        valid_types: List of valid transaction types
+    
+    Returns:
+        Dictionary with:
+        - amount: Total amount
+        - category: Main category (most common or first)
+        - type: Main type
+        - confidence: Average confidence
+        - transactions: List of individual transactions (if multiple)
+    """
+    if valid_types is None:
+        valid_types = ["Thu nhập", "Chi phí"]
+    
+    # Parse JSON
+    try:
+        prediction = parse_json_response(raw_output)
+    except PostprocessingError as e:
+        logger.warning(f"JSON parse failed in multi-transaction mode: {e}")
+        # Return single fallback
+        if valid_categories:
+            return create_fallback_prediction(valid_categories, valid_types, raw_output)
+        return create_open_domain_fallback(raw_output, valid_types)
+    
+    # Check if response contains transactions array
+    if "transactions" in prediction and isinstance(prediction["transactions"], list):
+        # Multi-transaction response
+        return process_transactions_array(
+            prediction["transactions"],
+            valid_categories,
+            valid_types
+        )
+    else:
+        # Single transaction response
+        if valid_categories:
+            return process_single_transaction_closed(prediction, valid_categories, valid_types)
+        return process_single_transaction_open(prediction, valid_types)
+
+
+def process_transactions_array(
+    transactions: List[Dict],
+    valid_categories: List[str] = None,
+    valid_types: List[str] = None
+) -> Dict[str, Any]:
+    """
+    Process array of transactions
+    
+    Args:
+        transactions: List of transaction dictionaries
+        valid_categories: List of valid categories (None for open-domain)
+        valid_types: List of valid types
+    
+    Returns:
+        Combined result with total amount and transactions list
+    """
+    if not transactions:
+        return {
+            "amount": 0,
+            "category": "Khác",
+            "type": "Chi phí",
+            "confidence": 0.0,
+            "transactions": []
+        }
+    
+    processed_transactions = []
+    total_amount = 0
+    categories = []
+    types = []
+    confidences = []
+    
+    for tx in transactions:
+        # Process each transaction
+        item = tx.get("item", "")
+        amount = tx.get("amount", 0)
+        category = tx.get("category", "Khác")
+        trans_type = tx.get("type", "Chi phí")
+        confidence = tx.get("confidence", 0.9)
+        
+        # Validate amount
+        if not isinstance(amount, (int, float)):
+            amount = 0
+        amount = int(amount)
+        
+        # Normalize category
+        if valid_categories:
+            category = normalize_category(category, valid_categories)
+        else:
+            category = normalize_open_category(category)
+        
+        # Normalize type
+        trans_type = normalize_type(trans_type, valid_types)
+        
+        # Normalize confidence
+        if not isinstance(confidence, (int, float)):
+            confidence = 0.9
+        confidence = clamp_confidence(float(confidence))
+        
+        processed_tx = {
+            "item": str(item) if item else "Unknown",
+            "amount": amount,
+            "category": category,
+            "type": trans_type,
+            "confidence": confidence
+        }
+        
+        processed_transactions.append(processed_tx)
+        total_amount += amount
+        categories.append(category)
+        types.append(trans_type)
+        confidences.append(confidence)
+    
+    # Determine main category (most common)
+    main_category = max(set(categories), key=categories.count) if categories else "Khác"
+    
+    # Determine main type (most common)
+    main_type = max(set(types), key=types.count) if types else "Chi phí"
+    
+    # Average confidence
+    avg_confidence = sum(confidences) / len(confidences) if confidences else 0.5
+    
+    return {
+        "amount": total_amount,
+        "category": main_category,
+        "type": main_type,
+        "confidence": round(avg_confidence, 2),
+        "transactions": processed_transactions
+    }
+
+
+def process_single_transaction_closed(
+    prediction: Dict[str, Any],
+    valid_categories: List[str],
+    valid_types: List[str]
+) -> Dict[str, Any]:
+    """Process single transaction for closed-domain"""
+    settings = get_settings()
+    validation = settings.validation
+    
+    # Normalize category
+    category = prediction.get("category", "Khác")
+    if not category or category not in valid_categories:
+        category = normalize_category(category, valid_categories)
+    
+    # Normalize type
+    trans_type = prediction.get("type", "Chi phí")
+    if trans_type not in valid_types:
+        trans_type = normalize_type(trans_type, valid_types)
+    
+    # Validate amount
+    amount = prediction.get("amount", 0)
+    if not isinstance(amount, (int, float)):
+        amount = 0
+    amount = int(amount)
+    
+    # Validate confidence
+    confidence = prediction.get("confidence", 0.5)
+    if not isinstance(confidence, (int, float)):
+        confidence = 0.5
+    confidence = clamp_confidence(float(confidence))
+    
+    return {
+        "amount": amount,
+        "category": category,
+        "type": trans_type,
+        "confidence": confidence,
+        "transactions": None
+    }
+
+
+def process_single_transaction_open(
+    prediction: Dict[str, Any],
+    valid_types: List[str]
+) -> Dict[str, Any]:
+    """Process single transaction for open-domain"""
+    settings = get_settings()
+    validation = settings.validation
+    
+    # Normalize category
+    category = prediction.get("category", "Khác")
+    if not category or not isinstance(category, str):
+        category = "Khác"
+    category = normalize_open_category(category.strip())
+    
+    # Normalize type
+    trans_type = prediction.get("type", "Chi phí")
+    if trans_type not in valid_types:
+        trans_type = normalize_type(trans_type, valid_types)
+    
+    # Validate amount
+    amount = prediction.get("amount", 0)
+    if not isinstance(amount, (int, float)):
+        amount = 0
+    amount = int(amount)
+    
+    # Validate confidence
+    confidence = prediction.get("confidence", 0.5)
+    if not isinstance(confidence, (int, float)):
+        confidence = 0.5
+    confidence = clamp_confidence(float(confidence))
+    
+    return {
+        "amount": amount,
+        "category": category,
+        "type": trans_type,
+        "confidence": confidence,
+        "transactions": None
     }

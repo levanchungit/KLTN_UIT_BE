@@ -19,7 +19,7 @@ class LLMConfig(BaseModel):
     """LLM Server Configuration (llama.cpp)"""
     base_url: str = "http://127.0.0.1:8080"
     api_key: str = "no-key-required"
-    model: str = "qwen2.5-1.5b-instruct-q4_0.gguf"
+    model: str = "gemma-2-9b-it-Q4_K_M.gguf"
     temperature: float = 0.0
     max_tokens: int = 512
     timeout: int = 60

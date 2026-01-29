@@ -5,9 +5,9 @@
 llm:
   base_url: "http://127.0.0.1:8080"
   api_key: "no-key-required"
-  # model: "qwen2.5-1.5b-instruct-q4_0.gguf"
+  model: "qwen2.5-1.5b-instruct-q4_0.gguf"
   # model: "qwen2.5-7b-instruct-q4_k_m.gguf"
-  model: "gemma-2-9b-it-Q4_K_M.gguf"
+  # model: "gemma-2-9b-it-Q4_K_M.gguf"
   temperature: 0.0
   max_tokens: 512
   timeout: 60 # seconds
@@ -20,7 +20,13 @@ server:
   cors_origins:
     - "http://localhost:8081"
     - "http://localhost:3000"
+    - "http://localhost:19000"
+    - "http://localhost:19006"
     - "exp://localhost:8081"
+    - "exp://localhost:19000"
+    - "exp://*"
+    - "http://192.168.*.*:*"
+    - "*"  # Allow all origins for development (remove in production)
 
 # Application Configuration
 app:
