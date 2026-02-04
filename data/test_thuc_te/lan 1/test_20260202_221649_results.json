@@ -1,0 +1,2643 @@
+{
+  "metadata": {
+    "timestamp": "20260202_221649",
+    "model": "qwen2.5-1.5b-instruct-q4_0.gguf",
+    "test_file": "data/chapter5_test_dataset.json",
+    "evaluation_time": "2026-02-02 22:18:56",
+    "total_samples": 50,
+    "total_transactions": 76,
+    "system_prompt": "BAN LA CHUYEN GIA PHAN LOAI GIAO DICH TAI CHINH VIET NAM.\n\nNHIEM VU: Phan tich van ban mo ta giao dich, trich xuat TAT CA cac giao dich va tra ve JSON array.\n\nDANH MUC CHI PHAI SU DUNG (EXACT):\nĂn uống, Đi lại, Nhà ở, Mua sắm, Giải trí, Giáo dục, Y tế, Thu nhập, Chưa xác định\n\nQUY TAC PHAN LOAI CHI TIET:\n\n1. AN UONG:\n   - an com, di cho, thuc pham, chợ, siêu thị thực phẩm, cơm, bún, phở, bánh mì, đồ ăn, thức ăn, nhà hàng, quán ăn, cafe, trà sữa, uống, ăn vặt, lẩu, buffet, tiệc\n   - TỪ KHÓA: ăn, cơm, bún, phở, bánh, cafe, trà, uống, chợ, siêu thị, thực phẩm, lẩu, buffet\n\n2. DI LAI:\n   - xăng xe, taxi, grab, xe buýt, vé xe, đi xe, di chuyển, gửi xe, đỗ xe, vé máy bay, tàu hỏa, phà, cầu đường, phí cầu đường, toll\n   - TỪ KHÓA: xăng, taxi, grab, xe, vé, đi, di chuyển, gửi, đỗ, cầu đường, toll\n\n3. NHA O:\n   - tiền nhà, tiền phòng, tiền trọ, điện, nước, gas, wifi, internet, phí quản lý, phí chung cư, dịch vụ nhà, bảo hiểm nhà, sửa nhà\n   - TỪ KHÓA: nhà, phòng, trọ, điện, nước, gas, wifi, internet, quản lý, chung cư\n\n4. MUA SAM:\n   - quần áo, giày dép, túi xách, đồ điện tử, điện thoại, laptop, đồ gia dụng, dụng cụ, đồ lặt vặt, shopping, mua sắm\n   - TỪ KHÓA: mua, quần, áo, giày, túi, điện tử, laptop, dụng cụ, shopping\n\n5. GIAI TRI:\n   - xem phim, netflix, spotify, game, karaoke, bar, club, du lịch, spa, massage, giải trí, concert, nhạc hội\n   - TỪ KHÓA: phim, netflix, spotify, game, karaoke, bar, club, du lịch, spa, giải trí\n\n6. GIAO DUC:\n   - học phí, sách giáo khoa, khóa học, chứng chỉ, gia sư, trung tâm đào tạo, đồ dùng học tập, laptop học, máy tính học\n   - TỪ KHÓA: học, sách, khóa, chứng chỉ, gia sư, trung tâm, đào tạo, học phí\n\n7. Y TE:\n   - thuốc, khám bệnh, bệnh viện, bác sĩ, siêu thị thuốc, y tế, spa chăm sóc sức khỏe, khám sức khỏe\n   - TỪ KHÓA: thuốc, khám, bệnh, viện, bác sĩ, y tế, sức khỏe\n\n8. THU NHAP:\n   - lương, thưởng, tiền lãi, lợi nhuận, buôn bán, thu nhập, được cho, quà tặng, phụ cấp, thu nhập phụ\n   - TỪ KHÓA: lương, thưởng, lãi, lợi, buôn bán, thu nhập, được cho, quà\n\n9. CHUA XAC DINH:\n   - phí linh tinh, chi tiêu không rõ, đóng góp từ thiện, thuế, phí dịch vụ không xác định\n   - TỪ KHÓA: linh tinh, không rõ, từ thiện, thuế, phí dịch vụ\n\nQUY TAC XAC DINH LOAI (THU/CHI):\n- CHI PHI (tieu xuat): tien RA khi MUA, THANH TOAN, AN UONG, DI CHUYEN, DICH VU\n- THU NHAP: tien VAO khi LƯƠNG, THƯỞNG, BÁN, LỢI NHUẬN, ĐƯỢC CHO\n\nQUY TAC SO TIEN:\n- 1tr, 1 trieu = 1000000\n- 500k, 500 nghin = 500000\n- 50k = 50000\n- 1t (ty) = 1000000000\n- 2tr, 2.5tr = 2000000, 2500000\n- Giu nguyen so neu da la so\n- CHI trich xuat SO TIEN CHINH (giao dich quan trong nhat trong cau)\n\nOUTPUT FORMAT:\n- Tra ve JSON array chua TAT CA cac giao dich\n- Moi giao dich co: amount, category, type\n- KHONG co text them, chi JSON\n\nVI DU:\nInput: \"luong thang 10tr\"\nOutput: [{\"amount\": 10000000, \"category\": \"Thu nhập\", \"type\": \"Thu nhập\"}]\n\nInput: \"di cho 100000 an uong\"\nOutput: [{\"amount\": 100000, \"category\": \"Ăn uống\", \"type\": \"Chi phí\"}]\n\nInput: \"xang xe 200k, sau do luong 11tr\"\nOutput: [{\"amount\": 200000, \"category\": \"Đi lại\", \"type\": \"Chi phí\"}, {\"amount\": 11000000, \"category\": \"Thu nhập\", \"type\": \"Thu nhập\"}]\n\nCHI TRA JSON ARRAY, KHONG CO TEXT THEM.",
+    "categories": [
+      "Ăn uống",
+      "Đi lại",
+      "Nhà ở",
+      "Mua sắm",
+      "Giải trí",
+      "Giáo dục",
+      "Y tế",
+      "Thu nhập",
+      "Chưa xác định"
+    ]
+  },
+  "main_metrics": {
+    "category_accuracy": "32.9%",
+    "type_accuracy": "55.3%",
+    "amount_accuracy": "93.4%",
+    "exact_match_accuracy": "25.0%"
+  },
+  "classification_metrics": {
+    "macro_precision": "49.3%",
+    "macro_recall": "34.7%",
+    "macro_f1_score": "34.2%"
+  },
+  "latency": {
+    "average_ms": "2540",
+    "min_ms": "1442",
+    "max_ms": "12968",
+    "std_ms": "1649"
+  },
+  "per_category_metrics": {
+    "Ăn uống": {
+      "precision": "100.0%",
+      "recall": "62.5%",
+      "f1": "76.9%",
+      "support": 8
+    },
+    "Đi lại": {
+      "precision": "0.0%",
+      "recall": "0.0%",
+      "f1": "0.0%",
+      "support": 6
+    },
+    "Nhà ở": {
+      "precision": "0.0%",
+      "recall": "0.0%",
+      "f1": "0.0%",
+      "support": 8
+    },
+    "Mua sắm": {
+      "precision": "71.4%",
+      "recall": "50.0%",
+      "f1": "58.8%",
+      "support": 10
+    },
+    "Giải trí": {
+      "precision": "75.0%",
+      "recall": "60.0%",
+      "f1": "66.7%",
+      "support": 5
+    },
+    "Giáo dục": {
+      "precision": "0.0%",
+      "recall": "0.0%",
+      "f1": "0.0%",
+      "support": 11
+    },
+    "Y tế": {
+      "precision": "75.0%",
+      "recall": "42.9%",
+      "f1": "54.5%",
+      "support": 7
+    },
+    "Thu nhập": {
+      "precision": "22.2%",
+      "recall": "88.9%",
+      "f1": "35.6%",
+      "support": 9
+    },
+    "Chưa xác định": {
+      "precision": "100.0%",
+      "recall": "8.3%",
+      "f1": "15.4%",
+      "support": 12
+    }
+  },
+  "results": [
+    {
+      "id": 1,
+      "text": "đi chợ mua thực phẩm 100000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 100000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 100000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 100000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 100000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 12968.32251548767
+    },
+    {
+      "id": 2,
+      "text": "sáng hôm qua sách giáo khoa 4355000đ, trưa ăn cơm suất 432000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 4355000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 4355000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 432000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 432000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 4355000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 432000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 4355000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 432000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 2979.7074794769287
+    },
+    {
+      "id": 3,
+      "text": "phí linh tinh 113k giày boots 144000đ",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 113000,
+            "category": "Chi phí",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 113000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 144000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 144000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 113000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 144000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 113000,
+          "category": "Chi phí",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 144000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2752.1135807037354
+    },
+    {
+      "id": 4,
+      "text": "đầu tuần trung tâm gia sư 1504000 Tối mua sắm cuối tuần 4470000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 1504000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 1504000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 4470000,
+            "category": "Mua sắm",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 4470000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 1504000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 4470000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 1504000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 4470000,
+          "category": "Mua sắm",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2913.7485027313232
+    },
+    {
+      "id": 5,
+      "text": "tiền nhà trọ 13362k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 13362000,
+            "category": "Nha O",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 13362000,
+            "category": "Nhà ở",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 13362000,
+          "category": "Nhà ở",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 13362000,
+          "category": "Nha O",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1566.6520595550537
+    },
+    {
+      "id": 6,
+      "text": "cuối tuần phí dịch vụ ngân hàng 535000đ phí quản lý chung cư 246000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 535000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 535000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 246000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 246000,
+            "category": "Nhà ở",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 535000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 246000,
+          "category": "Nhà ở",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 535000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 246000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2745.8927631378174
+    },
+    {
+      "id": 7,
+      "text": "wifi trọ 9344k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 9344000,
+            "category": "nha o",
+            "type": "chi phi"
+          },
+          "expected": {
+            "amount": 9344000,
+            "category": "Nhà ở",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 9344000,
+          "category": "Nhà ở",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 9344000,
+          "category": "nha o",
+          "type": "chi phi"
+        }
+      ],
+      "latency_ms": 1504.1146278381348
+    },
+    {
+      "id": 8,
+      "text": "sáng đỗ xe siêu thị 17000. Sau đó lương chồng 11tr",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 17000,
+            "category": "Di chuyển",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 17000,
+            "category": "Đi lại",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 11000000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 11000000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 17000,
+          "category": "Đi lại",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 11000000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 17000,
+          "category": "Di chuyển",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 11000000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2681.5197467803955
+    },
+    {
+      "id": 9,
+      "text": "mua túi xách 154000. Sau đó bữa ăn tiện lợi 48k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 154000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 154000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        },
+        {
+          "prediction": {
+            "amount": 48000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 48000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 154000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 48000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 154000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 48000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 2741.90092086792
+    },
+    {
+      "id": 10,
+      "text": "đóng góp từ thiện 26000đ - gửi xe 341k Chiều khóa học MBA 156000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 26000,
+            "category": "Thu nhập",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 26000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 341000,
+            "category": "Di chuyển",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 341000,
+            "category": "Đi lại",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 156000,
+            "category": "Gia học",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 156000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 26000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 341000,
+          "category": "Đi lại",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 156000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 26000,
+          "category": "Thu nhập",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 341000,
+          "category": "Di chuyển",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 156000,
+          "category": "Gia học",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 3756.6497325897217
+    },
+    {
+      "id": 11,
+      "text": "siêu thị thuốc 640000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 640000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 640000,
+            "category": "Y tế",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 640000,
+          "category": "Y tế",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 640000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1517.9567337036133
+    },
+    {
+      "id": 12,
+      "text": "khóa học MBA 84000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 84000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 84000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 84000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 84000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1488.7278079986572
+    },
+    {
+      "id": 13,
+      "text": "lẩu 33k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 33000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 33000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 33000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 33000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 1442.0063495635986
+    },
+    {
+      "id": 14,
+      "text": "thưởng 4548000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 4548000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 4548000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 4548000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 4548000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1460.8778953552246
+    },
+    {
+      "id": 15,
+      "text": "hôm qua wifi nhà trọ 2tr - tiền thối 11k - tiền phòng 2.182k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 200000,
+            "category": "NHA O",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 2000000,
+            "category": "Nhà ở",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": false,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 218200,
+            "category": "DI LAI",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 11000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": false,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 2000000,
+          "category": "Nhà ở",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 11000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 2182000,
+          "category": "Nhà ở",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 200000,
+          "category": "NHA O",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 110000,
+          "category": "THU NHAP",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 218200,
+          "category": "DI LAI",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 3823.3542442321777
+    },
+    {
+      "id": 16,
+      "text": "trưa hôm qua cơm gia đình 12000, bán nông sản 38162000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 12000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 12000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        },
+        {
+          "prediction": {
+            "amount": 38162000,
+            "category": "Mua sắm",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 38162000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 12000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 38162000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 12000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 38162000,
+          "category": "Mua sắm",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2807.5613975524902
+    },
+    {
+      "id": 17,
+      "text": "tối nay lời từ buôn bán 5421000, vận chuyển hàng 18000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 5421000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 5421000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        },
+        {
+          "prediction": {
+            "amount": 18000,
+            "category": "Chi phí",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 18000,
+            "category": "Đi lại",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 5421000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 18000,
+          "category": "Đi lại",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 5421000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 18000,
+          "category": "Chi phí",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 2690.50669670105
+    },
+    {
+      "id": 18,
+      "text": "vừa khám sức khỏe 69k - quán ngon 166k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 69000,
+            "category": "Y tế",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 69000,
+            "category": "Y tế",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 166000,
+            "category": "Giải trí",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 166000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 69000,
+          "category": "Y tế",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 166000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 69000,
+          "category": "Y tế",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 166000,
+          "category": "Giải trí",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 2550.550937652588
+    },
+    {
+      "id": 19,
+      "text": "lương part time 8.533k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 853300,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 8533000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": false,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 8533000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 853300,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1457.2255611419678
+    },
+    {
+      "id": 20,
+      "text": "phí giao dịch ngân hàng 57000, taxi khách hàng 180000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 57000,
+            "category": "Thu nhập",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 57000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 180000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 180000,
+            "category": "Đi lại",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 57000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 180000,
+          "category": "Đi lại",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 57000,
+          "category": "Thu nhập",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 180000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2593.8901901245117
+    },
+    {
+      "id": 21,
+      "text": "tiền lãi 1527000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 1527000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 1527000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 1527000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 1527000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1600.4292964935303
+    },
+    {
+      "id": 22,
+      "text": "đầu tuần khóa học MBA 65000đ Tối đóng góp từ thiện 770000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 65000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 65000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 770000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 770000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 65000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 770000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 65000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 770000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2700.0372409820557
+    },
+    {
+      "id": 23,
+      "text": "vừa dụng cụ làm việc 335k. Tối thuốc giảm đau 65000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 335000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 335000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 65000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 65000,
+            "category": "Y tế",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 335000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 65000,
+          "category": "Y tế",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 335000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 65000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2687.342405319214
+    },
+    {
+      "id": 24,
+      "text": "sáng nay hết chứng chỉ nghề 7.180k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 7180000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 7180000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 7180000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 7180000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1562.628984451294
+    },
+    {
+      "id": 25,
+      "text": "lời từ buôn bán 29079000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 29079000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 29079000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 29079000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 29079000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1576.5774250030518
+    },
+    {
+      "id": 26,
+      "text": "hàng kinh doanh 996000. Sau đó lời từ buôn bán 1200000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 996000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 1200000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": false,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 996000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 1200000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 996000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 1200000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2752.0153522491455
+    },
+    {
+      "id": 27,
+      "text": "sáng nay vé xe khách 143000. Tối giày búp bê 650000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 143000,
+            "category": "Di chuyển",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 143000,
+            "category": "Đi lại",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 650000,
+            "category": "Giày dép",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 650000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 143000,
+          "category": "Đi lại",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 650000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 143000,
+          "category": "Di chuyển",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 650000,
+          "category": "Giày dép",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 3025.8288383483887
+    },
+    {
+      "id": 28,
+      "text": "hôm nay phí dịch vụ 50k. Chiều xem phim 89k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 50000,
+            "category": "Thu nhập",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 50000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 89000,
+            "category": "Giải trí",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 89000,
+            "category": "Giải trí",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 50000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 89000,
+          "category": "Giải trí",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 50000,
+          "category": "Thu nhập",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 89000,
+          "category": "Giải trí",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 2751.5335083007812
+    },
+    {
+      "id": 29,
+      "text": "phí linh tinh 49000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 49000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 49000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 49000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 49000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 1892.716646194458
+    },
+    {
+      "id": 30,
+      "text": "tối hôm qua tối nay tiếp khách bar 104000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 104000,
+            "category": "Giải trí",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 104000,
+            "category": "Giải trí",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 104000,
+          "category": "Giải trí",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 104000,
+          "category": "Giải trí",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 2101.140260696411
+    },
+    {
+      "id": 31,
+      "text": "máy tính học tập 76k. Sau đó phí dịch vụ 120k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 76000,
+            "category": "LỢI NHUẬN",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 76000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 120000,
+            "category": "THU NHẬP",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 120000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 76000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 120000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 76000,
+          "category": "LỢI NHUẬN",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 120000,
+          "category": "THU NHẬP",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 3858.825206756592
+    },
+    {
+      "id": 32,
+      "text": "chứng chỉ nghề 651000. khám bệnh nghề nghiệp 350000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 651000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 651000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 350000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 350000,
+            "category": "Y tế",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 651000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 350000,
+          "category": "Y tế",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 651000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 350000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 3470.376968383789
+    },
+    {
+      "id": 33,
+      "text": "hôm nay điện hàng tháng 2tr",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 2000000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 2000000,
+            "category": "Nhà ở",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 2000000,
+          "category": "Nhà ở",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 2000000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2138.068199157715
+    },
+    {
+      "id": 34,
+      "text": "nước cửa hàng 3150k - xăng xe tải 131000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 3150000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 3150000,
+            "category": "Nhà ở",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 13100000,
+            "category": "Chi phí",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 131000,
+            "category": "Đi lại",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": false,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 3150000,
+          "category": "Nhà ở",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 131000,
+          "category": "Đi lại",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 3150000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 13100000,
+          "category": "Chi phí",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 3071.4330673217773
+    },
+    {
+      "id": 35,
+      "text": "bác sĩ 562000đ",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 562000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 562000,
+            "category": "Y tế",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 562000,
+          "category": "Y tế",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 562000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1504.615306854248
+    },
+    {
+      "id": 36,
+      "text": "tối hôm qua thanh toán quần áo gia đình 850000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 850000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 850000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 850000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 850000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 1853.5411357879639
+    },
+    {
+      "id": 37,
+      "text": "trưa hôm qua mua đồ lặt vặt 13000 học phí 500000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 13000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 13000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        },
+        {
+          "prediction": {
+            "amount": 500000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 500000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 13000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 500000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 13000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 500000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2957.5419425964355
+    },
+    {
+      "id": 38,
+      "text": "sáng nay spa chăm sóc sức khỏe 1441000đ",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 1441000,
+            "category": "Y tế",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 1441000,
+            "category": "Y tế",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 1441000,
+          "category": "Y tế",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 1441000,
+          "category": "Y tế",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1704.6830654144287
+    },
+    {
+      "id": 39,
+      "text": "trả đóng góp hội 44000đ",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 44000,
+            "category": "Thu nhập",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 44000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 44000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 44000,
+          "category": "Thu nhập",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 1531.484603881836
+    },
+    {
+      "id": 40,
+      "text": "hôm nay thu nhập shop 16257000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 16257000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 16257000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 16257000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 16257000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1730.043649673462
+    },
+    {
+      "id": 41,
+      "text": "sáng hôm qua trung tâm gia sư 4895k. Chiều ăn uống 125000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 4895000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 4895000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 125000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 125000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 4895000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 125000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 4895000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 125000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 2937.3693466186523
+    },
+    {
+      "id": 42,
+      "text": "hôm nay chi tiêu linh tinh 140k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 140000,
+            "category": "Chia sẻ",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 140000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 140000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 140000,
+          "category": "Chia sẻ",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 1585.3221416473389
+    },
+    {
+      "id": 43,
+      "text": "hôm nay netflix premium 33000đ uống coffee 45000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 33000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 33000,
+            "category": "Giải trí",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 45000,
+            "category": "An uống",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 45000,
+            "category": "Ăn uống",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 33000,
+          "category": "Giải trí",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 45000,
+          "category": "Ăn uống",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 33000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 45000,
+          "category": "An uống",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 2588.237524032593
+    },
+    {
+      "id": 44,
+      "text": "sáng hôm qua thuế kinh doanh 369000đ",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 369000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 369000,
+            "category": "Chưa xác định",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 369000,
+          "category": "Chưa xác định",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 369000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1557.8985214233398
+    },
+    {
+      "id": 45,
+      "text": "đồ dùng nhà bếp 902k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 902000,
+            "category": "Nha o",
+            "type": "Chi phi"
+          },
+          "expected": {
+            "amount": 902000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 902000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 902000,
+          "category": "Nha o",
+          "type": "Chi phi"
+        }
+      ],
+      "latency_ms": 1596.2598323822021
+    },
+    {
+      "id": 46,
+      "text": "trung tâm gia sư 80k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 80000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 80000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 80000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 80000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 1599.3835926055908
+    },
+    {
+      "id": 47,
+      "text": "chiều đi karaoke cuối tháng 305k",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 305000,
+            "category": "Giải trí",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 305000,
+            "category": "Giải trí",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 305000,
+          "category": "Giải trí",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 305000,
+          "category": "Giải trí",
+          "type": "Chi phí"
+        }
+      ],
+      "latency_ms": 1678.6479949951172
+    },
+    {
+      "id": 48,
+      "text": "dụng cụ làm việc 4655000, tiền nhà trọ 3000000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 4655000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 4655000,
+            "category": "Mua sắm",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": true
+        },
+        {
+          "prediction": {
+            "amount": 3000000,
+            "category": "Thu nhập",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 3000000,
+            "category": "Nhà ở",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 4655000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 3000000,
+          "category": "Nhà ở",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 4655000,
+          "category": "Mua sắm",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 3000000,
+          "category": "Thu nhập",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2928.9305210113525
+    },
+    {
+      "id": 49,
+      "text": "giải trí khách hàng 606000, khám sức khỏe 200000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 606000,
+            "category": "Y tế",
+            "type": "Chi phí"
+          },
+          "expected": {
+            "amount": 606000,
+            "category": "Giải trí",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": true,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 200000,
+            "category": "Y tế",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 200000,
+            "category": "Y tế",
+            "type": "Chi phí"
+          },
+          "cat_match": true,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 606000,
+          "category": "Giải trí",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 200000,
+          "category": "Y tế",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 606000,
+          "category": "Y tế",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 200000,
+          "category": "Y tế",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2774.7764587402344
+    },
+    {
+      "id": 50,
+      "text": "chứng chỉ nghề 59000đ, tiền nhà trọ 7730000",
+      "matches": [
+        {
+          "prediction": {
+            "amount": 59000,
+            "category": "giaosinh",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 59000,
+            "category": "Giáo dục",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        },
+        {
+          "prediction": {
+            "amount": 7730000,
+            "category": "nhao",
+            "type": "Thu nhập"
+          },
+          "expected": {
+            "amount": 7730000,
+            "category": "Nhà ở",
+            "type": "Chi phí"
+          },
+          "cat_match": false,
+          "type_match": false,
+          "amount_match": true,
+          "all_match": false
+        }
+      ],
+      "expected_transactions": [
+        {
+          "amount": 59000,
+          "category": "Giáo dục",
+          "type": "Chi phí"
+        },
+        {
+          "amount": 7730000,
+          "category": "Nhà ở",
+          "type": "Chi phí"
+        }
+      ],
+      "predictions": [
+        {
+          "amount": 59000,
+          "category": "giaosinh",
+          "type": "Thu nhập"
+        },
+        {
+          "amount": 7730000,
+          "category": "nhao",
+          "type": "Thu nhập"
+        }
+      ],
+      "latency_ms": 2848.3850955963135
+    }
+  ]
+}

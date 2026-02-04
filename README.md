@@ -1,10 +1,10 @@
 # KLTN_UIT_BE - AI Backend for Transaction Classification
 
-FastAPI + llama.cpp Integration
+FastAPI + llama.cpp Integration với Qwen2.5-7B
 
 ## Mục tiêu
 
-Xây dựng dịch vụ AI Backend nhận mô tả giao dịch tiếng Việt từ React Native, gọi LLM (Qwen/Gemma chạy bằng llama.cpp) để trích xuất số tiền + phân loại danh mục, trả về JSON:
+Xây dựng dịch vụ AI Backend nhận mô tả giao dịch tiếng Việt từ React Native, gọi LLM (Qwen chạy bằng llama.cpp) để trích xuất số tiền + phân loại danh mục, trả về JSON:
 
 ```json
 {
@@ -18,10 +18,30 @@ Xây dựng dịch vụ AI Backend nhận mô tả giao dịch tiếng Việt t�
 ## Kiến trúc hệ thống
 
 ```
-React Native → POST /predict → FastAPI → llama.cpp /v1/chat/completions → JSON
+┌─────────────────────────────────────────────────────────────────┐
+│                      KLTN_UIT (Frontend)                         │
+│  User nhập: "Sáng nay uống cafe 50k, chiều đi grab 80k"          │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ POST /api/v1/predict
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   KLTN_UIT_BE (FastAPI Backend)                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  1. Preprocessing: Chuẩn hóa text tiếng Việt             │   │
+│  │  2. LLM Service: Gọi llama.cpp server                    │   │
+│  │  3. Postprocessing: Parse JSON + Validate                │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ HTTP POST /v1/chat/completions
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    llama.cpp Server (Qwen2.5-7B)                 │
+│  Model: qwen2.5-7b-instruct-q4_k_m.gguf                          │
+│  Port: 8080                                                      │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Cài đặt
+## Cài đặt nhanh
 
 ### 1. Cài đặt dependencies
 
@@ -30,41 +50,115 @@ cd KLTN_UIT_BE
 pip install -r requirements.txt
 ```
 
-### 2. Cấu hình
-
-Chỉnh sửa file `config.yaml` hoặc tạo file `.env`:
+### 2. Khởi động LLM Server (llama.cpp)
 
 ```bash
-cp .env.example .env
+# Di chuyển đến thư mục llama.cpp
+cd ../llama.cpp
+
+# Khởi động server với Qwen2.5-7B
+./llama-server -m models/qwen2.5-7b-instruct-q4_k_m.gguf --port 8080 --host 127.0.0.1 -c 2048
 ```
 
-Cấu hình LLM server:
-
-```yaml
-llm:
-  base_url: "http://127.0.0.1:8080"  # llama.cpp server URL
-  model: "qwen2.5-1.5b-instruct-q4_0.gguf"  # hoặc "gemma-2b-it-q4_0.gguf"
-  temperature: 0.0
-```
-
-### 3. Khởi động LLM Server (llama.cpp)
+### 3. Khởi động FastAPI Backend
 
 ```bash
-# Tải llama.cpp Windows build
-# Tải model GGUF (Qwen2.5-1.5B Instruct Q4 hoặc Gemma 2B Q4)
+cd KLTN_UIT_BE
 
-# Chạy llama-server
-./llama-server -m qwen2.5-1.5b-instruct-q4_0.gguf --port 8080 --host 127.0.0.1
-```
-
-### 4. Khởi động FastAPI
-
-```bash
 # Development mode (với hot reload)
 python -m app.main
 
 # Hoặc
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### 4. Test nhanh
+
+```bash
+# Chạy quick evaluation (30 test cases)
+python quick_eval.py
+
+# Hoặc chuẩn bị data và chạy full evaluation
+python prepare_data.py
+python test_llm_7b_direct.py --file data/evaluation/aligned_test_100.csv
+```
+
+## Đánh giá Model (F1 Score, Precision, Recall)
+
+### Chuẩn bị dữ liệu
+
+```bash
+# Phân tích và chuẩn bị dữ liệu đánh giá
+python prepare_data.py
+```
+
+Script này sẽ:
+- Phân tích dataset (`training_data.json`, `test_data.json`)
+- Tạo file CSV aligned cho evaluation
+- Tạo `data/evaluation/aligned_test_100.csv` (100 mẫu test nhanh)
+- Tạo `data/evaluation/aligned_test.csv` (toàn bộ test set)
+
+### Chạy Evaluation
+
+```bash
+# Test nhanh với 100 mẫu
+python test_llm_7b_direct.py --file data/evaluation/aligned_test_100.csv
+
+# Test đầy đủ với toàn bộ test set
+python test_llm_7b_direct.py --file data/evaluation/aligned_test.csv
+
+# Test với số lượng tùy chỉnh
+python test_llm_7b_direct.py --sample 50 --file data/evaluation/aligned_test.csv
+```
+
+### Kết quả Evaluation
+
+Script sẽ xuất report bao gồm:
+
+| Metric | Mô tả | Mục tiêu |
+|--------|-------|----------|
+| Category Accuracy | % dự đoán đúng category | ≥ 80% |
+| Type Accuracy | % dự đoán đúng loại (thu/chi) | ≥ 90% |
+| Amount Accuracy | % dự đoán đúng số tiền | ≥ 90% |
+| Macro Precision | Precision trung bình theo category | ≥ 80% |
+| Macro Recall | Recall trung bình theo category | ≥ 80% |
+| **Macro F1** | **2×P×R/(P+R) - chỉ số chính** | **≥ 80%** |
+
+### Ví dụ Output
+
+```
+================================================================================
+           LLM TRANSACTION CLASSIFICATION - EVALUATION REPORT
+================================================================================
+Model:              qwen2.5-7b-instruct-q4_k_m.gguf
+Test File:          data/evaluation/aligned_test_100.csv
+Total Test Cases:   100
+Evaluation Time:    2024-01-15 10:30:00
+Runtime:            45.23 seconds
+
+MAIN METRICS
+--------------------------------------------------------------------------------
+Metric                          Value
+--------------------------------------------------------------------------------
+Category Accuracy:              85.0%
+Type Accuracy:                  95.0%
+Amount Accuracy:                90.0%
+Exact Match (All Correct):      78.0%
+
+CLASSIFICATION METRICS (Macro-averaged)
+--------------------------------------------------------------------------------
+Macro Precision:                83.5%
+Macro Recall:                   82.1%
+Macro F1 Score:                 82.8%
+
+PER-CATEGORY PERFORMANCE
+--------------------------------------------------------------------------------
+Category                 Precision      Recall      F1 Score   Support
+--------------------------------------------------------------------------------
+Cafe                         90.0%       85.0%       87.5%        10
+Di chuyển                    88.0%       92.0%       90.0%        12
+Giải trí                     85.0%       80.0%       82.5%         8
+...
 ```
 
 ## API Endpoints
@@ -78,7 +172,7 @@ Dự đoán thông tin giao dịch từ mô tả tiếng Việt.
 ```json
 {
   "text": "Mẹ cho 1tr",
-  "categories": ["Quà tặng", "Lương", "Ăn uống", "Mượn tiền", "Chuyển khoản"],
+  "categories": ["Quà tặng", "Lương", "Ăn uống", "Mượn tiền"],
   "locale": "vi-VN",
   "currency": "VND"
 }
@@ -99,26 +193,47 @@ Dự đoán thông tin giao dịch từ mô tả tiếng Việt.
 
 Kiểm tra trạng thái service và LLM availability.
 
+```bash
+curl http://localhost:8000/api/v1/health
+```
+
 ### GET /api/v1/categories
 
 Lấy danh sách danh mục mặc định.
+
+```bash
+curl http://localhost:8000/api/v1/categories
+```
 
 ### POST /api/v1/predict/batch
 
 Dự đoán hàng loạt cho nhiều giao dịch.
 
-## Test
-
 ```bash
-# Chạy tất cả tests
-pytest tests/ -v
-
-# Chạy tests cho preprocessing
-pytest tests/test_preprocessing.py -v
-
-# Chạy tests cho API
-pytest tests/test_api.py -v
+curl -X POST "http://localhost:8000/api/v1/predict/batch" \
+  -H "Content-Type: application/json" \
+  -d '{"texts": ["Cafe 30k", "Grab 50k", "Lương 10tr"]}'
 ```
+
+## Danh mục được hỗ trợ
+
+| Category | Ví dụ |
+|----------|-------|
+| 4G | Internet, Data, Wifi, tiền mạng |
+| Cafe | Cafe, trà, sinh tố, đồ uống |
+| Di chuyển | Xăng xe, taxi, bus, grab, xe ôm |
+| Giáo dục | Học phí, sách vở, khóa học |
+| Giải trí | Game, phim, du lịch, spotify |
+| Hớt tóc | Cắt tóc, làm đầu, salon |
+| Khác | Không khớp category nào |
+| Mượn tiền | Vay tiền, mượn tiền |
+| Mỹ phẩm chăm sóc da | Sữa tắm, xà bông, mỹ phẩm |
+| Phiếu lương | Lương, thưởng, phụ cấp |
+| Quà tặng | Quà tặng, được cho tiền |
+| Sức khỏe | Thuốc, khám bệnh, y tế |
+| Trả nợ | Trả nợ, thanh toán nợ |
+| Tạp phẩm | Đồ dùng sinh hoạt, tạp hóa |
+| Đám tiệc | Sinh nhật, đám cưới, tiệc |
 
 ## Cấu trúc dự án
 
@@ -142,44 +257,21 @@ KLTN_UIT_BE/
 │   └── prompts/
 │       ├── __init__.py
 │       └── system_prompts.py # Prompt templates
-├── tests/
-│   ├── __init__.py
-│   ├── test_preprocessing.py
-│   └── test_api.py
+├── data/
+│   ├── processed/
+│   │   ├── training_data.json   # Dataset huấn luyện
+│   │   ├── test_data.json       # Dataset test
+│   │   └── category_mapping.json
+│   └── evaluation/              # File sau khi chạy prepare_data.py
+│       ├── aligned_train.csv
+│       ├── aligned_test.csv
+│       └── aligned_test_100.csv
 ├── config.yaml              # Configuration file
 ├── requirements.txt         # Python dependencies
-├── .env.example            # Environment variables template
+├── test_llm_7b_direct.py    # Full evaluation script
+├── quick_eval.py            # Quick test (30 cases)
+├── prepare_data.py          # Data preparation
 └── README.md
-```
-
-## Danh mục mặc định
-
-- Quà tặng
-- Lương
-- Ăn uống
-- Mượn tiền
-- Chuyển khoản
-- Mua sắm
-- Di chuyển
-- Giải trí
-- Sức khỏe
-- Hóa đơn
-- Giáo dục
-- Khác
-
-## Ví dụ sử dụng với cURL
-
-```bash
-# Test prediction
-curl -X POST "http://localhost:8000/api/v1/predict" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Mẹ cho 1tr", "categories": ["Quà tặng", "Lương", "Ăn uống"]}'
-
-# Health check
-curl "http://localhost:8000/api/v1/health"
-
-# Get categories
-curl "http://localhost:8000/api/v1/categories"
 ```
 
 ## Tích hợp với React Native
@@ -187,6 +279,7 @@ curl "http://localhost:8000/api/v1/categories"
 ```javascript
 // React Native code example
 const predictTransaction = async (text, categories) => {
+  try {
   const response = await fetch('http://<YOUR_IP>:8000/api/v1/predict', {
     method: 'POST',
     headers: {
@@ -205,61 +298,65 @@ const predictTransaction = async (text, categories) => {
     type: data.type,
     confidence: data.confidence,
   };
+  } catch (error) {
+    console.error('Prediction error:', error);
+    return null;
+  }
 };
+
+// Sử dụng
+const result = await predictTransaction("Mẹ cho 1tr", ["Quà tặng", "Phiếu lương"]);
+console.log(result);
+// { amount: 1000000, category: "Quà tặng", type: "Thu nhập", confidence: 0.88 }
 ```
 
-## Hướng dẫn triển khai theo từng bước
+## Quy tắc số tiền
 
-### Bước 1 — Dựng LLM server
+| Input | Output |
+|-------|--------|
+| "1tr", "1 triệu" | 1000000 VND |
+| "500k", "500 nghìn" | 500000 VND |
+| "50k" | 50000 VND |
+| "10d", "10đ" | 10 VND |
 
-1. Tải llama.cpp (Windows build)
-2. Tải model GGUF (Qwen2.5-1.5B Instruct Q4 hoặc Gemma 2B Q4)
-3. Chạy llama-server trên 127.0.0.1:8080
-4. Test gọi được endpoint /v1/chat/completions
+## Hướng dẫn triển khai
 
-### Bước 2 — Tạo FastAPI service
+### Bước 1 — Khởi động LLM Server
 
-1. Tạo project Python, cài fastapi, uvicorn, requests
-2. Tạo endpoint POST /predict nhận text + categories
-3. Gọi llama.cpp qua HTTP theo format chat completion
+```bash
+cd ../llama.cpp
+./llama-server -m models/qwen2.5-7b-instruct-q4_k_m.gguf --port 8080 --host 127.0.0.1
+```
 
-### Bước 3 — Prompt Engineering (ép JSON)
+### Bước 2 — Khởi động Backend
 
-1. Dùng system prompt quy định schema JSON + luật "category chỉ được chọn trong list"
-2. User prompt gồm: Câu giao dịch + Danh sách category hợp lệ
-3. Temperature = 0 để output ổn định
+```bash
+cd KLTN_UIT_BE
+python -m app.main
+```
 
-### Bước 4 — Tiền xử lý + Hậu xử lý
+### Bước 3 — Chạy Evaluation
 
-1. Tiền xử lý: chuẩn hoá text, quy đổi tiền 200k/1tr
-2. Hậu xử lý: parse JSON, validate:
-   - category phải thuộc categories[]
-   - amount là số
-   - type thuộc {Thu nhập, Chi phí, Chuyển khoản}
-   - Tính/giới hạn confidence trong [0,1]
-3. Nếu parse fail → trả lỗi kèm raw để debug
+```bash
+# Chuẩn bị dữ liệu
+python prepare_data.py
 
-### Bước 5 — Tích hợp React Native
+# Đánh giá model
+python test_llm_7b_direct.py --file data/evaluation/aligned_test_100.csv
+```
 
-1. RN gọi POST /predict
-2. Nhận JSON → render preview form (amount/category/type)
-3. User confirm → app tạo giao dịch trong DB/local storage
+### Bước 4 — Tích hợp Frontend
 
-### Bước 6 — Thử nghiệm & đánh giá
+Sử dụng API endpoints từ React Native app.
 
-1. Chuẩn bị tập test (ví dụ 100–300 câu giao dịch)
-2. Đánh giá:
-   - Accuracy phân loại category
-   - Accuracy trích xuất amount
-   - Latency (thời gian phản hồi)
-3. Ghi nhận trường hợp sai để chỉnh prompt/rule
+## Cải thiện độ chính xác
 
-## Tiêu chí hoàn thành (Deliverables)
+Nếu F1 Score < 80%, thử các phương pháp sau:
 
-- [ ] LLM server chạy ổn định (llama.cpp + model GGUF)
-- [ ] FastAPI endpoint /predict trả JSON đúng schema
-- [ ] React Native gọi được API và tạo giao dịch tự động
-- [ ] Báo cáo kết quả thử nghiệm: accuracy + ví dụ đúng/sai + hướng cải thiện
+1. **Few-shot Learning**: Thêm ví dụ vào system prompt
+2. **Category-specific prompts**: Tạo prompt riêng cho từng category khó
+3. **Post-processing rules**: Thêm rules để sửa các lỗi thường gặp
+4. **Fine-tuning**: Fine-tune Qwen2.5-7B với dataset của bạn (cần GPU mạnh)
 
 ## License
 
