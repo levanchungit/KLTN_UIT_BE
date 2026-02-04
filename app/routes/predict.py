@@ -8,10 +8,11 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from app.config import get_settings
 from app.prompts.system_prompts import (
-    MULTI_TRANSACTION_SYSTEM_PROMPT,
+    MULTI_TRANSACTION_PROMPT,
     build_multi_transaction_closed_domain_prompt,
     build_multi_transaction_user_prompt,
-    get_cache_info as get_prompt_cache_info
+    get_cache_info as get_prompt_cache_info,
+    FAST_SYSTEM_PROMPT
 )
 from app.schemas.request_response import (
     PredictRequest,
@@ -97,8 +98,9 @@ async def predict(request: PredictRequest) -> PredictionResponse:
             # OPEN-DOMAIN MODE
             # AI tự xác định category, hỗ trợ multi-transaction
             # ========================
-            system_prompt = MULTI_TRANSACTION_SYSTEM_PROMPT
-            user_prompt = build_multi_transaction_user_prompt(normalized_text)
+            # Use FAST_SYSTEM_PROMPT for better performance
+            system_prompt = FAST_SYSTEM_PROMPT
+            user_prompt = f'Phân tích giao dịch: "{normalized_text}"\n\nJSON:'
             
         else:
             # ========================
