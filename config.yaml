@@ -6,7 +6,7 @@ llm:
   base_url: "http://127.0.0.1:8080"
   api_key: "no-key-required"
   # Recommended models (choose one):
-  model: "qwen2.5-1.5b-instruct-q4_0"
+  model: "qwen2.5-7b-instruct-q4_k_m"
   temperature: 0.0  # Deterministic output for caching
   max_tokens: 300   # Optimized: JSON output needs ~100-150 tokens
   timeout: 60  # Reduced from 60s

@@ -9,10 +9,10 @@ from fastapi import APIRouter, HTTPException
 from app.config import get_settings
 from app.prompts.system_prompts import (
     MULTI_TRANSACTION_PROMPT,
-    build_multi_transaction_closed_domain_prompt,
-    build_multi_transaction_user_prompt,
-    get_cache_info as get_prompt_cache_info,
-    FAST_SYSTEM_PROMPT
+    build_dynamic_system_prompt,
+    build_user_prompt_with_categories,
+    FAST_SYSTEM_PROMPT,
+    get_fast_system_prompt
 )
 from app.schemas.request_response import (
     PredictRequest,
@@ -113,8 +113,8 @@ async def predict(request: PredictRequest) -> PredictionResponse:
             
             # Convert to tuple for prompt caching
             cat_tuple = tuple(valid_categories)
-            system_prompt = build_multi_transaction_closed_domain_prompt(cat_tuple)
-            user_prompt = build_multi_transaction_user_prompt(normalized_text, valid_categories)
+            system_prompt = build_dynamic_system_prompt(cat_tuple)
+            user_prompt = build_user_prompt_with_categories(normalized_text, valid_categories)
         
         # Get LLM prediction
         raw_output = llm_service.get_prediction(
@@ -266,11 +266,8 @@ async def get_cache_stats() -> dict:
     """
     llm_service = get_llm_service()
     return {
-        "prompt_cache": {
-            "closed_domain": str(get_prompt_cache_info()["closed_domain"]),
-            "multi_transaction": str(get_prompt_cache_info()["multi_transaction"])
-        },
-        "response_cache": llm_service.get_cache_stats()
+        "response_cache": llm_service.get_cache_stats(),
+        "note": "Prompt caching is handled automatically via LRU cache"
     }
 
 
