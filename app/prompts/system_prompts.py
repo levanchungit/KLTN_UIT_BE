@@ -14,23 +14,28 @@ FAST_SYSTEM_PROMPT = """Phân loại giao dịch tiếng Việt.
 DANH MỤC: 4G, Cafe, Di chuyển, Giáo dục, Giải trí, Hớt tóc, Khác, Mượn tiền, Mỹ phẩm, Phiếu lương, Quà tặng, Sức khỏe, Trả nợ, Tạp phẩm, Đám tiệc
 
 QUY TẮC:
+- note: nội dung gốc cho từng giao dịch (lấy phần text tương ứng với mỗi số tiền)
 - type: "Thu nhập" (tiền vào) | "Chi phí" (tiền ra)
 - amount: "1tr"=1000000, "500k"=500000, "50k"=50000
 - category: CHỌN TỪ DANH SÁCH trên
 - confidence: 0.0-1.0
 
-VÍ DỤ:
-"lương 10tr" -> {"amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}
-"cắt tóc 60k" -> {"amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}
-"mẹ cho 1 triệu" -> {"amount": 1000000, "category": "Quà tặng", "type": "Thu nhập", "confidence": 0.90}
-"grab 80k" -> {"amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}
-"cafe 40k" -> {"amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}
-"thuốc 25k" -> {"amount": 25000, "category": "Sức khỏe", "type": "Chi phí", "confidence": 0.90}
-"spotify 47k" -> {"amount": 47000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.95}
+QUAN TRỌNG - NHIỀU SỐ TIỀN = NHIỀU GIAO DỊCH:
+- Đếm SỐ TIỀN trong câu (20k, 30k, 50.000, 1tr...)
+- 1 số tiền → 1 giao dịch
+- 2+ số tiền → NHIỀU giao dịch (tách riêng!)
 
-NHIỀU GIAO DỊCH: ["cafe 40k", "grab 80k"] -> [{"amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]
+VÍ DỤ ĐƠN (1 số tiền):
+"lương 10tr" → {"transactions": [{"note": "lương 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}]}
+"cắt tóc 60k" → {"transactions": [{"note": "cắt tóc 60k", "amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}]}
+"cafe 40k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}]}
 
-CHỈ JSON, KHÔNG text thêm."""
+VÍ DỤ NHIỀU (2 số tiền):
+"cafe 40k grab 80k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
+"Ăn sáng 20k grab 30k" → {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
+"trà sữa 60k xem phim 100k" → {"transactions": [{"note": "trà sữa 60k", "amount": 60000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "xem phim 100k", "amount": 100000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.90}]}
+
+CHỈ JSON! KHÔNG text thêm! LUÔN có "transactions" array!"""
 
 # =====================
 # COMPREHENSIVE SYSTEM PROMPT (Recommended for best accuracy)
@@ -39,6 +44,7 @@ COMPREHENSIVE_SYSTEM_PROMPT = """Bạn là AI chuyên phân loại giao dịch t
 
 ## NHIỆM VỤ CHÍNH
 Phân tích câu mô tả giao dịch và trích xuất:
+- note: nội dung gốc cho từng giao dịch (lấy phần text tương ứng với mỗi số tiền)
 - amount: Số tiền VND
 - category: Danh mục giao dịch
 - type: Loại giao dịch (Thu nhập/Chi phí)
@@ -82,39 +88,64 @@ Phân tích câu mô tả giao dịch và trích xuất:
 4. Trích xuất số tiền
 
 ## VÍ DỤ:
-- "Lương tháng 10tr" → {"amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}
-- "Cắt tóc 60k" → {"amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}
-- "Mẹ cho 1 triệu" → {"amount": 1000000, "category": "Quà tặng", "type": "Thu nhập", "confidence": 0.90}
-- "Grab đi ăn 45k" → {"amount": 45000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.85}
-- "Spotify tháng 47k" → {"amount": 47000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.95}
-- "Thuốc cảm 25k" → {"amount": 25000, "category": "Sức khỏe", "type": "Chi phí", "confidence": 0.90}
+"Lương tháng 10tr" → {"transactions": [{"note": "lương 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}]}
+"Cắt tóc 60k" → {"transactions": [{"note": "cắt tóc 60k", "amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}]}
+"Mẹ cho 1 triệu" → {"transactions": [{"note": "mẹ cho 1 triệu", "amount": 1000000, "category": "Quà tặng", "type": "Thu nhập", "confidence": 0.90}]}
+"Grab đi ăn 45k" → {"transactions": [{"note": "Grab đi ăn 45k", "amount": 45000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.85}]}
+"Spotify tháng 47k" → {"transactions": [{"note": "Spotify tháng 47k", "amount": 47000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.95}]}
+"Thuốc cảm 25k" → {"transactions": [{"note": "Thuốc cảm 25k", "amount": 25000, "category": "Sức khỏe", "type": "Chi phí", "confidence": 0.90}]}
 
 ## QUY TẮC OUTPUT:
-- Chỉ trả JSON array, KHÔNG có text thêm
-- Nếu câu có nhiều giao dịch, trả array chứa nhiều objects
+- Chỉ trả JSON với "transactions" array, KHÔNG có text thêm
+- Mỗi transaction PHẢI có "note": nội dung gốc tương ứng với số tiền đó
+- Nếu câu có 1 giao dịch: {"transactions": [...]}
+- Nếu câu có nhiều giao dịch: {"transactions": [...]}
 - Confidence: 1.0 = chắc chắn, 0.5 = không chắc, 0.1 = đoán
 
-Example multi-transaction:
+VÍ DỤ ĐƠN (1 số tiền):
+Input: "Lương tháng 10tr"
+Output: {"transactions": [{"note": "Lương tháng 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}]}
+
+Input: "Cắt tóc 60k"
+Output: {"transactions": [{"note": "Cắt tóc 60k", "amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}]}
+
+VÍ DỤ NHIỀU (2 số tiền):
 Input: "Sáng uống cafe 40k, chiều grab 80k"
-Output: [{"amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]"""
+Output: {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
+
+Input: "Ăn sáng 20k grab 30k"
+Output: {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}"""
 
 # =====================
 # DEFAULT PROMPTS (Backward compatible)
 # =====================
-OPEN_DOMAIN_SYSTEM_PROMPT = """Bạn là AI phân loại giao dịch tài chính Việt Nam.
+OPEN_DOMAIN_SYSTEM_PROMPT = """Phân loại giao dịch tiếng Việt.
 
-## DANH MỤC:
-"4G", "Cafe", "Di chuyển", "Giáo dục", "Giải trí", "Hớt tóc", "Khác", "Mượn tiền", 
-"Mỹ phẩm", "Phiếu lương", "Quà tặng", "Sức khỏe", "Trả nợ", "Tạp phẩm", "Đám tiệc"
+DANH MỤC: 4G, Cafe, Di chuyển, Giáo dục, Giải trí, Hớt tóc, Khác, Mượn tiền, Mỹ phẩm, Phiếu lương, Quà tặng, Sức khỏe, Trả nợ, Tạp phẩm, Đám tiệc
 
-## QUY TẮC:
-1. type: "Thu nhập" (tiền vào) | "Chi phí" (tiền ra)
-2. amount: "1tr"=1000000, "500k"=500000, "50k"=50000
-3. category: PHẢI từ danh sách trên
-4. confidence: 0.0-1.0
+QUY TẮC:
+- note: nội dung gốc cho từng giao dịch (lấy phần text tương ứng với mỗi số tiền)
+- type: "Thu nhập" (tiền vào) | "Chi phí" (tiền ra)
+- amount: "1tr"=1000000, "500k"=500000, "50k"=50000
+- category: CHỌN TỪ DANH SÁCH trên
+- confidence: 0.0-1.0
 
-OUTPUT: Chỉ JSON, không text thêm.
-{"amount": <số>, "category": "<tên>", "type": "<loại>", "confidence": <0-1>}"""
+QUAN TRỌNG - NHIỀU SỐ TIỀN = NHIỀU GIAO DỊCH:
+- Đếm SỐ TIỀN trong câu (20k, 30k, 50.000, 1tr...)
+- 1 số tiền → 1 giao dịch
+- 2+ số tiền → NHIỀU giao dịch (tách riêng!)
+
+VÍ DỤ ĐƠN (1 số tiền):
+"lương 10tr" → {"transactions": [{"note": "lương 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}]}
+"cắt tóc 60k" → {"transactions": [{"note": "cắt tóc 60k", "amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}]}
+"cafe 40k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}]}
+
+VÍ DỤ NHIỀU (2 số tiền):
+"cafe 40k grab 80k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
+"Ăn sáng 20k grab 30k" → {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
+"trà sữa 60k xem phim 100k" → {"transactions": [{"note": "trà sữa 60k", "amount": 60000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "xem phim 100k", "amount": 100000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.90}]}
+
+CHỈ JSON! KHÔNG text thêm! LUÔN có "transactions" array!"""
 
 # =====================
 # DYNAMIC PROMPT BUILDER (For user-specific categories)
@@ -128,19 +159,31 @@ def build_dynamic_system_prompt(categories: Tuple[str, ...]) -> str:
     cats_list = ", ".join(f'"{cat}"' for cat in categories)
     fallback = "Khác" if "Khác" in categories else categories[0]
     
-    return f"""Bạn là AI phân loại giao dịch tài chính Việt Nam.
+    return f"""Phân loại giao dịch tiếng Việt với danh mục cho trước.
 
-## DANH MỤC (BẮT BUỘC chọn từ đây):
-{cats_list}
+DANH MỤC: {cats_list}
 
-## QUY TẮC:
-1. type: "Thu nhập" (tiền vào: lương, thưởng, quà, được cho, vay) | "Chi phí" (tiền ra: mua, trả, dịch vụ)
-2. amount: "1tr"=1000000, "500k"=500000, "50k"=50000
-3. category: PHẢI từ danh sách trên. Không khớp → "{fallback}"
-4. confidence: 0.0-1.0
+QUY TẮC:
+- note: nội dung gốc cho từng giao dịch (lấy phần text tương ứng với mỗi số tiền)
+- type: "Thu nhập" (tiền vào) | "Chi phí" (tiền ra)
+- amount: "1tr"=1000000, "500k"=500000, "50k"=50000
+- category: CHỌN TỪ DANH SÁCH trên. Không khớp → "{fallback}"
+- confidence: 0.0-1.0
 
-OUTPUT: Chỉ JSON, không text thêm.
-{{"amount": <số>, "category": "<từ danh sách>", "type": "<loại>", "confidence": <0-1>}}"""
+QUAN TRỌNG - NHIỀU SỐ TIỀN = NHIỀU GIAO DỊCH:
+- Đếm SỐ TIỀN trong câu (20k, 30k, 50.000, 1tr...)
+- 1 số tiền → 1 giao dịch
+- 2+ số tiền → NHIỀU giao dịch (tách riêng!)
+
+VÍ DỤ ĐƠN (1 số tiền):
+"lương 10tr" → {{"transactions": [{{"note": "lương 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}}]}}
+"cafe 40k" → {{"transactions": [{{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}}]}}
+
+VÍ DỤ NHIỀU (2 số tiền):
+"cafe 40k grab 80k" → {{"transactions": [{{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}}]}}
+"Ăn sáng 20k grab 30k" → {{"transactions": [{{"note": "Ăn sáng 20k", "amount": 20000, "category": "X", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 30k", "amount": 30000, "category": "Y", "type": "Chi phí", "confidence": 0.90}}]}}
+
+CHỈ JSON! KHÔNG text thêm! LUÔN có "transactions" array!"""
 
 # =====================
 # USER PROMPT BUILDERS
@@ -158,40 +201,42 @@ def build_user_prompt_with_categories(transaction_text: str, categories: List[st
 # FEW-SHOT EXAMPLES (Optional for better accuracy)
 # =====================
 FEW_SHOT_EXAMPLES = """
-## VÍ DỤ:
-- "Lương tháng 10tr" → {{"amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}}
-- "Cắt tóc 60k" → {{"amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}}
-- "Mẹ cho 1 triệu" → {{"amount": 1000000, "category": "Quà tặng", "type": "Thu nhập", "confidence": 0.90}}
-- "Grab đi ăn 45k" → {{"amount": 45000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.85}}
-- "Spotify 47k" → {{"amount": 47000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.95}}
-- "Thuốc cảm 25k" → {{"amount": 25000, "category": "Sức khỏe", "type": "Chi phí", "confidence": 0.90}}
-- "Trả nợ anh Minh 500k" → {{"amount": 500000, "category": "Trả nợ", "type": "Chi phí", "confidence": 0.95}}
-- "Cà phê sáng 30k" → {{"amount": 30000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}}
+## VÍ DỤ ĐƠN:
+- "Lương tháng 10tr" → {{"transactions": [{{"note": "Lương tháng 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}}]}}
+- "Cắt tóc 60k" → {{"transactions": [{{"note": "Cắt tóc 60k", "amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}}]}}
+- "Mẹ cho 1 triệu" → {{"transactions": [{{"note": "Mẹ cho 1 triệu", "amount": 1000000, "category": "Quà tặng", "type": "Thu nhập", "confidence": 0.90}}]}}
+
+## VÍ DỤ NHIỀU:
+- "cafe 40k grab 80k" → {{"transactions": [{{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}}]}}
+- "Ăn sáng 20k grab 30k" → {{"transactions": [{{"note": "Ăn sáng 20k", "amount": 20000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 30k", "amount": 30000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}}]}}
 """
 
 # =====================
 # MULTI-TRANSACTION PROMPT
 # =====================
-MULTI_TRANSACTION_PROMPT = """Bạn là AI phân loại giao dịch tài chính Việt Nam.
+MULTI_TRANSACTION_PROMPT = """Phân loại giao dịch tiếng Việt - TÁCH nhiều giao dịch nếu có!
 
-## NHIỆM VỤ:
-Phân tích và TÁCH thành nhiều giao dịch nếu câu chứa nhiều mục.
+DANH MỤC: 4G, Cafe, Di chuyển, Giáo dục, Giải trí, Hớt tóc, Khác, Mượn tiền, Mỹ phẩm, Phiếu lương, Quà tặng, Sức khỏe, Trả nợ, Tạp phẩm, Đám tiệc
 
-## DANH MỤC:
-"4G", "Cafe", "Di chuyển", "Giáo dục", "Giải trí", "Hớt tóc", "Khác", "Mượn tiền", 
-"Mỹ phẩm", "Phiếu lương", "Quà tặng", "Sức khỏe", "Trả nợ", "Tạp phẩm", "Đám tiệc"
+QUY TẮC:
+- note: nội dung gốc cho từng giao dịch (lấy phần text tương ứng với mỗi số tiền)
+- type: "Thu nhập" (tiền vào) | "Chi phí" (tiền ra)
+- amount: "1tr"=1000000, "500k"=500000, "50k"=50000
+- category: CHỌN TỪ DANH SÁCH trên
+- confidence: 0.0-1.0
 
-## QUY TẮC:
-1. Tách nhiều giao dịch nếu có (dấu phẩy, "và", "rồi", etc.)
-2. amount: "1tr"=1000000, "500k"=500000
-3. category: PHẢI từ danh sách
-4. type: "Thu nhập" | "Chi phí"
+QUAN TRỌNG:
+- Đếm SỐ TIỀN trong câu → Mỗi số tiền = 1 giao dịch
+- Nhiều số tiền → NHIỀU giao dịch (tách riêng!)
 
-## OUTPUT:
-- 1 giao dịch: {{"amount": 50000, "category": "X", "type": "Chi phí", "confidence": 0.95}}
-- Nhiều giao dịch: [{{"item": "Tên", "amount": 50000, "category": "X", "type": "Chi phí", "confidence": 0.95}}, ...]
+VÍ DỤ ĐƠN:
+"cafe 40k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}]}
 
-Chỉ JSON, không text thêm."""
+VÍ DỤ NHIỀU:
+"cafe 40k grab 80k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
+"Ăn sáng 20k grab 30k" → {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
+
+CHỈ JSON! LUÔN có "transactions" array!"""
 
 # =====================
 # DEFAULT EXPORTS - Use FAST prompt for performance

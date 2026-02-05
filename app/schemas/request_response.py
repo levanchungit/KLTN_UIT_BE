@@ -81,10 +81,10 @@ class TransactionItem(BaseModel):
     """
     Single transaction item in multi-transaction response
     """
-    item: str = Field(
+    note: str = Field(
         ...,
-        description="Tên/mô tả ngắn của giao dịch",
-        examples=["Kem", "Sữa chua", "Trà đào"]
+        description="Nội dung gốc của giao dịch (phần text tương ứng với số tiền)",
+        examples=["cafe 40k", "grab 80k", "Ăn sáng 20k"]
     )
     amount: int = Field(
         ...,

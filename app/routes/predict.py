@@ -153,7 +153,7 @@ async def predict(request: PredictRequest) -> PredictionResponse:
         if prediction.get("transactions"):
             transactions = [
                 TransactionItem(
-                    item=tx.get("item", ""),
+                    note=tx.get("note", tx.get("item", "")),
                     amount=tx.get("amount", 0),
                     category=tx.get("category", "Khác"),
                     type=tx.get("type", "Chi phí"),
