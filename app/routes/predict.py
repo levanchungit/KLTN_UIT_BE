@@ -35,6 +35,7 @@ from app.services.postprocessing import (
     process_multi_transaction_response,
     PostprocessingError
 )
+from app.services.conversation import generate_conversation_message
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["prediction"])
@@ -150,7 +151,17 @@ async def predict(request: PredictRequest) -> PredictionResponse:
         
         # Build transactions list for response
         transactions = None
+        tx_list = []
         if prediction.get("transactions"):
+            for tx in prediction["transactions"]:
+                tx_item = TransactionItem(
+                    note=tx.get("note", tx.get("item", "")),
+                    amount=tx.get("amount", 0),
+                    category=tx.get("category", "Khác"),
+                    type=tx.get("type", "Chi phí"),
+                    confidence=tx.get("confidence", 0.9)
+                )
+                tx_list.append(tx_item.dict())
             transactions = [
                 TransactionItem(
                     note=tx.get("note", tx.get("item", "")),
@@ -162,12 +173,17 @@ async def predict(request: PredictRequest) -> PredictionResponse:
                 for tx in prediction["transactions"]
             ]
         
-        # Return response
+        # Generate conversational message instead of structured category/type/confidence
+        conversation_message = generate_conversation_message(
+            amount=prediction.get("amount", 0),
+            transactions=tx_list if tx_list else None,
+            original_text=request.text
+        )
+        
+        # Return response with conversational message
         return PredictionResponse(
             amount=prediction.get("amount", 0),
-            category=prediction.get("category", "Khác"),
-            type=prediction.get("type", "Chi phí"),
-            confidence=prediction.get("confidence", 0.5),
+            message=conversation_message,
             transactions=transactions,
             raw_output=raw_output if settings.server.debug else None
         )
@@ -231,9 +247,7 @@ async def predict_batch(
         except HTTPException as e:
             responses.append(PredictionResponse(
                 amount=0,
-                category="Khác",
-                type="Chi phí",
-                confidence=0.0,
+                message="❌ Lỗi xử lý yêu cầu",
                 raw_output=f"Error: {e.detail}"
             ))
     

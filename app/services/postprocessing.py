@@ -887,7 +887,7 @@ def process_single_transaction_closed(
         "category": category,
         "type": trans_type,
         "confidence": confidence,
-        "transactions": None
+        "transactions": [{"note": prediction.get("note", ""), "amount": amount, "category": category, "type": trans_type, "confidence": confidence}]
     }
 
 
@@ -927,5 +927,5 @@ def process_single_transaction_open(
         "category": category,
         "type": trans_type,
         "confidence": confidence,
-        "transactions": None
+        "transactions": [{"note": prediction.get("note", ""), "amount": amount, "category": category, "type": trans_type, "confidence": confidence}]
     }
