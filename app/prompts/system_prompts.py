@@ -1,6 +1,7 @@
 """
 KLTN_UIT_BE System Prompts - Optimized for Transaction Classification
 Enhanced prompts for better accuracy with Qwen2.5-7B
+Updated: 9 danh mục chuẩn (Ăn uống, Đi lại, Nhà ở, Mua sắm, Giải trí, Giáo dục, Y tế, Thu nhập, Chưa xác định)
 """
 from typing import List, Tuple
 from functools import lru_cache
@@ -11,7 +12,7 @@ from functools import lru_cache
 # =====================
 FAST_SYSTEM_PROMPT = """Phân loại giao dịch tiếng Việt.
 
-DANH MỤC: 4G, Cafe, Di chuyển, Giáo dục, Giải trí, Hớt tóc, Khác, Mượn tiền, Mỹ phẩm, Phiếu lương, Quà tặng, Sức khỏe, Trả nợ, Tạp phẩm, Đám tiệc
+DANH MỤC: Ăn uống, Đi lại, Nhà ở, Mua sắm, Giải trí, Giáo dục, Y tế, Thu nhập, Chưa xác định
 
 QUY TẮC:
 - note: nội dung gốc cho từng giao dịch (lấy phần text tương ứng với mỗi số tiền)
@@ -26,14 +27,14 @@ QUAN TRỌNG - NHIỀU SỐ TIỀN = NHIỀU GIAO DỊCH:
 - 2+ số tiền → NHIỀU giao dịch (tách riêng!)
 
 VÍ DỤ ĐƠN (1 số tiền):
-"lương 10tr" → {"transactions": [{"note": "lương 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}]}
-"cắt tóc 60k" → {"transactions": [{"note": "cắt tóc 60k", "amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}]}
-"cafe 40k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}]}
+"lương 10tr" → {"transactions": [{"note": "lương 10tr", "amount": 10000000, "category": "Thu nhập", "type": "Thu nhập", "confidence": 0.95}]}
+"đi chợ 60k" → {"transactions": [{"note": "đi chợ 60k", "amount": 60000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95}]}
+"cafe 40k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}]}
 
 VÍ DỤ NHIỀU (2 số tiền):
-"cafe 40k grab 80k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
-"Ăn sáng 20k grab 30k" → {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
-"trà sữa 60k xem phim 100k" → {"transactions": [{"note": "trà sữa 60k", "amount": 60000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "xem phim 100k", "amount": 100000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.90}]}
+"cafe 40k grab 80k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}]}
+"Ăn sáng 20k grab 30k" → {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}]}
+"trà sữa 60k xem phim 100k" → {"transactions": [{"note": "trà sữa 60k", "amount": 60000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "xem phim 100k", "amount": 100000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.90}]}
 
 CHỈ JSON! KHÔNG text thêm! LUÔN có "transactions" array!"""
 
@@ -53,24 +54,18 @@ Phân tích câu mô tả giao dịch và trích xuất:
 ## DANH MỤC GIAO DỊCH (BẮT BUỘC chọn 1 trong list):
 | Category | Ví dụ |
 |----------|-------|
-| "4G" | Internet, Data, Wifi, 4G, 5G, tiền mạng |
-| "Cafe" | Cafe, trà, sinh tố, đồ uống |
-| "Di chuyển" | Xăng xe, taxi, bus, grab, xe ôm, vé xe, di chuyển |
-| "Giáo dục" | Học phí, sách vở, khóa học, dụng cụ học tập |
-| "Giải trí" | Game, phim, du lịch, giải trí, netflix, spotify |
-| "Hớt tóc" | Cắt tóc, làm đầu, salon, tạo kiểu |
-| "Khác" | Không khớp category nào khác |
-| "Mượn tiền" | Vay tiền, mượn tiền, cho vay |
-| "Mỹ phẩm chăm sóc da" | Sữa tắm, xà bông, mỹ phẩm, son, kem dưỡng |
-| "Phiếu lương" | Lương, thưởng, phụ cấp, thu nhập, lương tháng |
-| "Quà tặng" | Quà tặng, được cho tiền, tặng quà |
-| "Sức khỏe" | Thuốc, khám bệnh, bệnh viện, y tế |
-| "Trả nợ" | Trả nợ, thanh toán nợ, trả tiền người ta |
-| "Tạp phẩm" | Đồ dùng sinh hoạt, tạp hóa, dụng cụ nhà |
-| "Đám tiệc" | Sinh nhật, đám cưới, tiệc tùng, ăn mừng |
+| "Ăn uống" | Đi chợ, thực phẩm, cơm, bún, phở, cafe, trà sữa, nhà hàng, quán ăn |
+| "Đi lại" | Xăng xe, taxi, grab, bus, vé xe, đỗ xe, gửi xe, vận chuyển |
+| "Nhà ở" | Tiền nhà, tiền phòng, tiền trọ, điện, nước, gas, wifi, internet |
+| "Mua sắm" | Quần áo, giày dép, túi xách, đồ điện tử, đồ gia dụng, dụng cụ |
+| "Giải trí" | Xem phim, netflix, game, karaoke, du lịch, spa, giải trí |
+| "Giáo dục" | Học phí, sách vở, khóa học, chứng chỉ, gia sư, trung tâm |
+| "Y tế" | Thuốc, khám bệnh, bệnh viện, bác sĩ, spa chăm sóc sức khỏe |
+| "Thu nhập" | Lương, thưởng, tiền lãi, lợi nhuận, buôn bán, được cho tiền |
+| "Chưa xác định" | Phí linh tinh, chi tiêu không rõ, đóng góp từ thiện, thuế |
 
 ## LOẠI GIAO DỊCH:
-- "Thu nhập": tiền VÀO (lương, thưởng, quà tặng tiền, được cho, vay)
+- "Thu nhập": tiền VÀO (lương, thưởng, quà tặng tiền, được cho, bán hàng)
 - "Chi phí": tiền RA (mua sắm, thanh toán, ăn uống, di chuyển, dịch vụ)
 
 ## QUY TẮC SỐ TIỀN:
@@ -88,12 +83,12 @@ Phân tích câu mô tả giao dịch và trích xuất:
 4. Trích xuất số tiền
 
 ## VÍ DỤ:
-"Lương tháng 10tr" → {"transactions": [{"note": "lương 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}]}
-"Cắt tóc 60k" → {"transactions": [{"note": "cắt tóc 60k", "amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}]}
-"Mẹ cho 1 triệu" → {"transactions": [{"note": "mẹ cho 1 triệu", "amount": 1000000, "category": "Quà tặng", "type": "Thu nhập", "confidence": 0.90}]}
-"Grab đi ăn 45k" → {"transactions": [{"note": "Grab đi ăn 45k", "amount": 45000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.85}]}
-"Spotify tháng 47k" → {"transactions": [{"note": "Spotify tháng 47k", "amount": 47000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.95}]}
-"Thuốc cảm 25k" → {"transactions": [{"note": "Thuốc cảm 25k", "amount": 25000, "category": "Sức khỏe", "type": "Chi phí", "confidence": 0.90}]}
+"Lương tháng 10tr" → {"transactions": [{"note": "lương 10tr", "amount": 10000000, "category": "Thu nhập", "type": "Thu nhập", "confidence": 0.95}]}
+"Đi chợ 60k" → {"transactions": [{"note": "đi chợ 60k", "amount": 60000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95}]}
+"Mẹ cho 1 triệu" → {"transactions": [{"note": "mẹ cho 1 triệu", "amount": 1000000, "category": "Thu nhập", "type": "Thu nhập", "confidence": 0.90}]}
+"Grab đi làm 45k" → {"transactions": [{"note": "Grab đi làm 45k", "amount": 45000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.85}]}
+"Netflix tháng 47k" → {"transactions": [{"note": "Netflix tháng 47k", "amount": 47000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.95}]}
+"Thuốc cảm 25k" → {"transactions": [{"note": "Thuốc cảm 25k", "amount": 25000, "category": "Y tế", "type": "Chi phí", "confidence": 0.90}]}
 
 ## QUY TẮC OUTPUT:
 - Chỉ trả JSON với "transactions" array, KHÔNG có text thêm
@@ -104,24 +99,24 @@ Phân tích câu mô tả giao dịch và trích xuất:
 
 VÍ DỤ ĐƠN (1 số tiền):
 Input: "Lương tháng 10tr"
-Output: {"transactions": [{"note": "Lương tháng 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}]}
+Output: {"transactions": [{"note": "Lương tháng 10tr", "amount": 10000000, "category": "Thu nhập", "type": "Thu nhập", "confidence": 0.95}]}
 
-Input: "Cắt tóc 60k"
-Output: {"transactions": [{"note": "Cắt tóc 60k", "amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}]}
+Input: "Đi chợ 60k"
+Output: {"transactions": [{"note": "Đi chợ 60k", "amount": 60000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95}]}
 
 VÍ DỤ NHIỀU (2 số tiền):
 Input: "Sáng uống cafe 40k, chiều grab 80k"
-Output: {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
+Output: {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}]}
 
 Input: "Ăn sáng 20k grab 30k"
-Output: {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}"""
+Output: {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}]}"""
 
 # =====================
 # DEFAULT PROMPTS (Backward compatible)
 # =====================
 OPEN_DOMAIN_SYSTEM_PROMPT = """Phân loại giao dịch tiếng Việt.
 
-DANH MỤC: 4G, Cafe, Di chuyển, Giáo dục, Giải trí, Hớt tóc, Khác, Mượn tiền, Mỹ phẩm, Phiếu lương, Quà tặng, Sức khỏe, Trả nợ, Tạp phẩm, Đám tiệc
+DANH MỤC: Ăn uống, Đi lại, Nhà ở, Mua sắm, Giải trí, Giáo dục, Y tế, Thu nhập, Chưa xác định
 
 QUY TẮC:
 - note: nội dung gốc cho từng giao dịch (lấy phần text tương ứng với mỗi số tiền)
@@ -136,14 +131,14 @@ QUAN TRỌNG - NHIỀU SỐ TIỀN = NHIỀU GIAO DỊCH:
 - 2+ số tiền → NHIỀU giao dịch (tách riêng!)
 
 VÍ DỤ ĐƠN (1 số tiền):
-"lương 10tr" → {"transactions": [{"note": "lương 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}]}
-"cắt tóc 60k" → {"transactions": [{"note": "cắt tóc 60k", "amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}]}
-"cafe 40k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}]}
+"lương 10tr" → {"transactions": [{"note": "lương 10tr", "amount": 10000000, "category": "Thu nhập", "type": "Thu nhập", "confidence": 0.95}]}
+"đi chợ 60k" → {"transactions": [{"note": "đi chợ 60k", "amount": 60000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95}]}
+"cafe 40k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}]}
 
 VÍ DỤ NHIỀU (2 số tiền):
-"cafe 40k grab 80k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
-"Ăn sáng 20k grab 30k" → {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
-"trà sữa 60k xem phim 100k" → {"transactions": [{"note": "trà sữa 60k", "amount": 60000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "xem phim 100k", "amount": 100000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.90}]}
+"cafe 40k grab 80k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}]}
+"Ăn sáng 20k grab 30k" → {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}]}
+"trà sữa 60k xem phim 100k" → {"transactions": [{"note": "trà sữa 60k", "amount": 60000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "xem phim 100k", "amount": 100000, "category": "Giải trí", "type": "Chi phí", "confidence": 0.90}]}
 
 CHỈ JSON! KHÔNG text thêm! LUÔN có "transactions" array!"""
 
@@ -157,7 +152,7 @@ def build_dynamic_system_prompt(categories: Tuple[str, ...]) -> str:
         return OPEN_DOMAIN_SYSTEM_PROMPT
     
     cats_list = ", ".join(f'"{cat}"' for cat in categories)
-    fallback = "Khác" if "Khác" in categories else categories[0]
+    fallback = "Chưa xác định" if "Chưa xác định" in categories else categories[0]
     
     return f"""Phân loại giao dịch tiếng Việt với danh mục cho trước.
 
@@ -176,12 +171,12 @@ QUAN TRỌNG - NHIỀU SỐ TIỀN = NHIỀU GIAO DỊCH:
 - 2+ số tiền → NHIỀU giao dịch (tách riêng!)
 
 VÍ DỤ ĐƠN (1 số tiền):
-"lương 10tr" → {{"transactions": [{{"note": "lương 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}}]}}
-"cafe 40k" → {{"transactions": [{{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}}]}}
+"lương 10tr" → {{"transactions": [{{"note": "lương 10tr", "amount": 10000000, "category": "Thu nhập", "type": "Thu nhập", "confidence": 0.95}}]}}
+"cafe 40k" → {{"transactions": [{{"note": "cafe 40k", "amount": 40000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}}]}}
 
 VÍ DỤ NHIỀU (2 số tiền):
-"cafe 40k grab 80k" → {{"transactions": [{{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}}]}}
-"Ăn sáng 20k grab 30k" → {{"transactions": [{{"note": "Ăn sáng 20k", "amount": 20000, "category": "X", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 30k", "amount": 30000, "category": "Y", "type": "Chi phí", "confidence": 0.90}}]}}
+"cafe 40k grab 80k" → {{"transactions": [{{"note": "cafe 40k", "amount": 40000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 80k", "amount": 80000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}}]}}
+"Ăn sáng 20k grab 30k" → {{"transactions": [{{"note": "Ăn sáng 20k", "amount": 20000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 30k", "amount": 30000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}}]}}
 
 CHỈ JSON! KHÔNG text thêm! LUÔN có "transactions" array!"""
 
@@ -202,13 +197,13 @@ def build_user_prompt_with_categories(transaction_text: str, categories: List[st
 # =====================
 FEW_SHOT_EXAMPLES = """
 ## VÍ DỤ ĐƠN:
-- "Lương tháng 10tr" → {{"transactions": [{{"note": "Lương tháng 10tr", "amount": 10000000, "category": "Phiếu lương", "type": "Thu nhập", "confidence": 0.95}}]}}
-- "Cắt tóc 60k" → {{"transactions": [{{"note": "Cắt tóc 60k", "amount": 60000, "category": "Hớt tóc", "type": "Chi phí", "confidence": 0.95}}]}}
-- "Mẹ cho 1 triệu" → {{"transactions": [{{"note": "Mẹ cho 1 triệu", "amount": 1000000, "category": "Quà tặng", "type": "Thu nhập", "confidence": 0.90}}]}}
+- "Lương tháng 10tr" → {{"transactions": [{{"note": "Lương tháng 10tr", "amount": 10000000, "category": "Thu nhập", "type": "Thu nhập", "confidence": 0.95}}]}}
+- "Đi chợ 60k" → {{"transactions": [{{"note": "Đi chợ 60k", "amount": 60000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95}}]}}
+- "Mẹ cho 1 triệu" → {{"transactions": [{{"note": "Mẹ cho 1 triệu", "amount": 1000000, "category": "Thu nhập", "type": "Thu nhập", "confidence": 0.90}}]}}
 
 ## VÍ DỤ NHIỀU:
-- "cafe 40k grab 80k" → {{"transactions": [{{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}}]}}
-- "Ăn sáng 20k grab 30k" → {{"transactions": [{{"note": "Ăn sáng 20k", "amount": 20000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 30k", "amount": 30000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}}]}}
+- "cafe 40k grab 80k" → {{"transactions": [{{"note": "cafe 40k", "amount": 40000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 80k", "amount": 80000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}}]}}
+- "Ăn sáng 20k grab 30k" → {{"transactions": [{{"note": "Ăn sáng 20k", "amount": 20000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}}, {{"note": "grab 30k", "amount": 30000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}}]}}
 """
 
 # =====================
@@ -216,7 +211,7 @@ FEW_SHOT_EXAMPLES = """
 # =====================
 MULTI_TRANSACTION_PROMPT = """Phân loại giao dịch tiếng Việt - TÁCH nhiều giao dịch nếu có!
 
-DANH MỤC: 4G, Cafe, Di chuyển, Giáo dục, Giải trí, Hớt tóc, Khác, Mượn tiền, Mỹ phẩm, Phiếu lương, Quà tặng, Sức khỏe, Trả nợ, Tạp phẩm, Đám tiệc
+DANH MỤC: Ăn uống, Đi lại, Nhà ở, Mua sắm, Giải trí, Giáo dục, Y tế, Thu nhập, Chưa xác định
 
 QUY TẮC:
 - note: nội dung gốc cho từng giao dịch (lấy phần text tương ứng với mỗi số tiền)
@@ -230,11 +225,11 @@ QUAN TRỌNG:
 - Nhiều số tiền → NHIỀU giao dịch (tách riêng!)
 
 VÍ DỤ ĐƠN:
-"cafe 40k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}]}
+"cafe 40k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}]}
 
 VÍ DỤ NHIỀU:
-"cafe 40k grab 80k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
-"Ăn sáng 20k grab 30k" → {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Cafe", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Di chuyển", "type": "Chi phí", "confidence": 0.90}]}
+"cafe 40k grab 80k" → {"transactions": [{"note": "cafe 40k", "amount": 40000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 80k", "amount": 80000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}]}
+"Ăn sáng 20k grab 30k" → {"transactions": [{"note": "Ăn sáng 20k", "amount": 20000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.90}, {"note": "grab 30k", "amount": 30000, "category": "Đi lại", "type": "Chi phí", "confidence": 0.90}]}
 
 CHỈ JSON! LUÔN có "transactions" array!"""
 
