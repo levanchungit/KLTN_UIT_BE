@@ -8,10 +8,11 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from app.config import get_settings
 from app.prompts.system_prompts import (
-    MULTI_TRANSACTION_SYSTEM_PROMPT,
-    build_multi_transaction_closed_domain_prompt,
-    build_multi_transaction_user_prompt,
-    get_cache_info as get_prompt_cache_info
+    MULTI_TRANSACTION_PROMPT,
+    build_dynamic_system_prompt,
+    build_user_prompt_with_categories,
+    FAST_SYSTEM_PROMPT,
+    get_fast_system_prompt
 )
 from app.schemas.request_response import (
     PredictRequest,
@@ -34,6 +35,7 @@ from app.services.postprocessing import (
     process_multi_transaction_response,
     PostprocessingError
 )
+from app.services.conversation import generate_conversation_message
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["prediction"])
@@ -97,8 +99,9 @@ async def predict(request: PredictRequest) -> PredictionResponse:
             # OPEN-DOMAIN MODE
             # AI tự xác định category, hỗ trợ multi-transaction
             # ========================
-            system_prompt = MULTI_TRANSACTION_SYSTEM_PROMPT
-            user_prompt = build_multi_transaction_user_prompt(normalized_text)
+            # Use FAST_SYSTEM_PROMPT for better performance
+            system_prompt = FAST_SYSTEM_PROMPT
+            user_prompt = f'Phân tích giao dịch: "{normalized_text}"\n\nJSON:'
             
         else:
             # ========================
@@ -111,8 +114,8 @@ async def predict(request: PredictRequest) -> PredictionResponse:
             
             # Convert to tuple for prompt caching
             cat_tuple = tuple(valid_categories)
-            system_prompt = build_multi_transaction_closed_domain_prompt(cat_tuple)
-            user_prompt = build_multi_transaction_user_prompt(normalized_text, valid_categories)
+            system_prompt = build_dynamic_system_prompt(cat_tuple)
+            user_prompt = build_user_prompt_with_categories(normalized_text, valid_categories)
         
         # Get LLM prediction
         raw_output = llm_service.get_prediction(
@@ -148,10 +151,20 @@ async def predict(request: PredictRequest) -> PredictionResponse:
         
         # Build transactions list for response
         transactions = None
+        tx_list = []
         if prediction.get("transactions"):
+            for tx in prediction["transactions"]:
+                tx_item = TransactionItem(
+                    note=tx.get("note", tx.get("item", "")),
+                    amount=tx.get("amount", 0),
+                    category=tx.get("category", "Khác"),
+                    type=tx.get("type", "Chi phí"),
+                    confidence=tx.get("confidence", 0.9)
+                )
+                tx_list.append(tx_item.dict())
             transactions = [
                 TransactionItem(
-                    item=tx.get("item", ""),
+                    note=tx.get("note", tx.get("item", "")),
                     amount=tx.get("amount", 0),
                     category=tx.get("category", "Khác"),
                     type=tx.get("type", "Chi phí"),
@@ -160,12 +173,17 @@ async def predict(request: PredictRequest) -> PredictionResponse:
                 for tx in prediction["transactions"]
             ]
         
-        # Return response
+        # Generate conversational message instead of structured category/type/confidence
+        conversation_message = generate_conversation_message(
+            amount=prediction.get("amount", 0),
+            transactions=tx_list if tx_list else None,
+            original_text=request.text
+        )
+        
+        # Return response with conversational message
         return PredictionResponse(
             amount=prediction.get("amount", 0),
-            category=prediction.get("category", "Khác"),
-            type=prediction.get("type", "Chi phí"),
-            confidence=prediction.get("confidence", 0.5),
+            message=conversation_message,
             transactions=transactions,
             raw_output=raw_output if settings.server.debug else None
         )
@@ -229,9 +247,7 @@ async def predict_batch(
         except HTTPException as e:
             responses.append(PredictionResponse(
                 amount=0,
-                category="Khác",
-                type="Chi phí",
-                confidence=0.0,
+                message="❌ Lỗi xử lý yêu cầu",
                 raw_output=f"Error: {e.detail}"
             ))
     
@@ -264,11 +280,8 @@ async def get_cache_stats() -> dict:
     """
     llm_service = get_llm_service()
     return {
-        "prompt_cache": {
-            "closed_domain": str(get_prompt_cache_info()["closed_domain"]),
-            "multi_transaction": str(get_prompt_cache_info()["multi_transaction"])
-        },
-        "response_cache": llm_service.get_cache_stats()
+        "response_cache": llm_service.get_cache_stats(),
+        "note": "Prompt caching is handled automatically via LRU cache"
     }
 
 

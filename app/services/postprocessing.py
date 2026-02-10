@@ -794,7 +794,7 @@ def process_transactions_array(
     
     for tx in transactions:
         # Process each transaction
-        item = tx.get("item", "")
+        note = tx.get("note", tx.get("item", ""))
         amount = tx.get("amount", 0)
         category = tx.get("category", "Khác")
         trans_type = tx.get("type", "Chi phí")
@@ -820,7 +820,7 @@ def process_transactions_array(
         confidence = clamp_confidence(float(confidence))
         
         processed_tx = {
-            "item": str(item) if item else "Unknown",
+            "note": str(note) if note else "Unknown",
             "amount": amount,
             "category": category,
             "type": trans_type,
@@ -887,7 +887,7 @@ def process_single_transaction_closed(
         "category": category,
         "type": trans_type,
         "confidence": confidence,
-        "transactions": None
+        "transactions": [{"note": prediction.get("note", ""), "amount": amount, "category": category, "type": trans_type, "confidence": confidence}]
     }
 
 
@@ -927,5 +927,5 @@ def process_single_transaction_open(
         "category": category,
         "type": trans_type,
         "confidence": confidence,
-        "transactions": None
+        "transactions": [{"note": prediction.get("note", ""), "amount": amount, "category": category, "type": trans_type, "confidence": confidence}]
     }

@@ -1,7 +1,7 @@
 """
 KLTN_UIT_BE Pydantic Schemas
 Request and Response models for the transaction classification API
-Supports both single and multi-transaction parsing
+Supports both single and multi-transaction parsing with conversational AI responses
 """
 from typing import List, Optional, Union
 from pydantic import BaseModel, Field, field_validator
@@ -81,10 +81,10 @@ class TransactionItem(BaseModel):
     """
     Single transaction item in multi-transaction response
     """
-    item: str = Field(
+    note: str = Field(
         ...,
-        description="Tên/mô tả ngắn của giao dịch",
-        examples=["Kem", "Sữa chua", "Trà đào"]
+        description="Nội dung gốc của giao dịch (phần text tương ứng với số tiền)",
+        examples=["cafe 40k", "grab 80k", "Ăn sáng 20k"]
     )
     amount: int = Field(
         ...,
@@ -114,14 +114,12 @@ class TransactionItem(BaseModel):
 # =====================
 class PredictionResponse(BaseModel):
     """
-    Response model for transaction prediction
+    Response model for transaction prediction with conversational AI feedback
     Supports both single transaction and multi-transaction
     
     Attributes:
         amount: Total transaction amount in VND
-        category: Predicted category (for single transaction)
-        type: Transaction type (Thu nhập/Chi phí)
-        confidence: Confidence score between 0 and 1
+        message: Context-aware conversational message for user interaction
         transactions: List of individual transactions (for multi-transaction)
         raw_output: Raw LLM output (for debugging)
     """
@@ -130,22 +128,10 @@ class PredictionResponse(BaseModel):
         description="Tổng số tiền giao dịch (VND)",
         examples=[142000]
     )
-    category: str = Field(
+    message: str = Field(
         ...,
-        description="Danh mục giao dịch chính",
-        examples=["Ăn uống"]
-    )
-    type: str = Field(
-        ...,
-        description="Loại giao dịch (Thu nhập/Chi phí)",
-        examples=["Chi phí"]
-    )
-    confidence: float = Field(
-        ...,
-        ge=0.0,
-        le=1.0,
-        description="Độ tin cậy của dự đoán (0-1)",
-        examples=[0.88]
+        description="Tin nhắn trả lời tự nhiên, ngữ cảnh với giao dịch của user",
+        examples=["Hôm nay bạn chi tiêu vui vẻ nhé! 😊"]
     )
     transactions: Optional[List[TransactionItem]] = Field(
         default=None,
@@ -161,13 +147,11 @@ class PredictionResponse(BaseModel):
         json_schema_extra = {
             "example": {
                 "amount": 142000,
-                "category": "Ăn uống",
-                "type": "Chi phí",
-                "confidence": 0.95,
+                "message": "Hôm nay bạn chi tiêu vui vẻ nhé! 😊 Mấy món này ngon lắm đấy!",
                 "transactions": [
-                    {"item": "Kem", "amount": 50000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95},
-                    {"item": "Sữa chua", "amount": 42000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95},
-                    {"item": "Trà đào", "amount": 50000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95}
+                    {"note": "Kem", "amount": 50000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95},
+                    {"note": "Sữa chua", "amount": 42000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95},
+                    {"note": "Trà đào", "amount": 50000, "category": "Ăn uống", "type": "Chi phí", "confidence": 0.95}
                 ]
             }
         }

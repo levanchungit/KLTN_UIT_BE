@@ -96,7 +96,8 @@ class LLMService:
         messages: List[Dict[str, str]],
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
-        use_cache: bool = True
+        use_cache: bool = True,
+        json_mode: bool = True
     ) -> str:
         """
         Get chat completion from LLM with caching
@@ -106,6 +107,7 @@ class LLMService:
             temperature: Override for temperature
             max_tokens: Override for max tokens
             use_cache: Whether to use response cache
+            json_mode: If True, force JSON output format. Set False for free-text (e.g. conversation messages)
         
         Returns:
             The text content of the completion
@@ -113,7 +115,7 @@ class LLMService:
         temp = temperature if temperature is not None else self.temperature
         tokens = max_tokens if max_tokens is not None else self.max_tokens
         
-        # Check cache first
+        # Check cache first (only for deterministic requests)
         if use_cache and temp == 0:
             cache_key = self._get_cache_key(messages, temp)
             if cache_key in self._response_cache:
@@ -127,8 +129,11 @@ class LLMService:
             "temperature": temp,
             "max_tokens": tokens,
             "stream": False,
-            "response_format": {"type": "json_object"}
         }
+        
+        # Only force JSON output when explicitly requested
+        if json_mode:
+            payload["response_format"] = {"type": "json_object"}
         
         try:
             response = self.client.post(url, headers=self._get_headers(), json=payload)
@@ -163,14 +168,30 @@ class LLMService:
         self,
         system_prompt: str,
         user_prompt: str,
-        temperature: float = 0.0
+        temperature: float = 0.0,
+        max_tokens: Optional[int] = None,
+        json_mode: bool = True
     ) -> str:
-        """Get prediction using system + user prompts"""
+        """
+        Get prediction using system + user prompts
+        
+        Args:
+            system_prompt: System prompt text
+            user_prompt: User prompt text
+            temperature: LLM temperature (0.0 = deterministic)
+            max_tokens: Override for max tokens
+            json_mode: If True, force JSON output. Set False for free-text responses.
+        """
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ]
-        return self.get_completion(messages=messages, temperature=temperature)
+        return self.get_completion(
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            json_mode=json_mode
+        )
     
     def clear_cache(self):
         """Clear response cache"""
