@@ -9,7 +9,7 @@ llm:
   model: "qwen2.5-7b-instruct-q4_k_m"
   temperature: 0.0  # Deterministic output for caching
   max_tokens: 300   # Optimized: JSON output needs ~100-150 tokens
-  timeout: 60  # Reduced from 60s
+  timeout: 120  # Increased for complex receipts
 
 # FastAPI Server Configuration
 server:

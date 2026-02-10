@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import load_config, get_settings
 from app.routes.predict import router as predict_router
+from app.routes.receipt import router as receipt_router
 from app.services.llm_service import close_llm_service
 # =====================
 # Logging Configuration
@@ -111,6 +112,7 @@ def create_app() -> FastAPI:
     
     # Include routers
     app.include_router(predict_router)
+    app.include_router(receipt_router)
     
     # Root endpoint
     @app.get("/")

@@ -22,7 +22,7 @@ class LLMConfig(BaseModel):
     model: str = "qwen2.5-7b-instruct-q4_k_m.gguf"
     temperature: float = 0.0
     max_tokens: int = 512
-    timeout: int = 60
+    timeout: int = 120
 
 
 class ServerConfig(BaseModel):
